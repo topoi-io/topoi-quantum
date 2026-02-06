@@ -2,12 +2,21 @@
 using System.Globalization;
 
 Console.OutputEncoding = System.Text.Encoding.UTF8;
-Console.WriteLine("Single-Qubit Gate Interpreter");
-Console.WriteLine("Type HELP for commands. Angles are in radians.\n");
 
+Console.WriteLine("N-Qubit Gate Interpreter (state-vector)");
+Console.Write("Number of qubits n (e.g. 1,2,3): ");
+int n = 1;
+{
+    var s = Console.ReadLine();
+    if (!string.IsNullOrWhiteSpace(s) && int.TryParse(s, out var parsed) && parsed > 0)
+        n = parsed;
+}
+
+Quantum.Init(n);
 Quantum.Reset();
-Quantum.PrintState();
+Quantum.PrintStateTop();
 Console.WriteLine();
+Console.WriteLine("Type HELP for commands. Angles are in radians.\n");
 
 while (true)
 {
@@ -25,71 +34,117 @@ while (true)
     {
         switch (cmd)
         {
-            case "EXPECT":
-                Quantum.Expect();
-                break;
-
             case "HELP":
                 PrintHelp();
                 break;
 
             case "PRINT":
-                Quantum.PrintState();
+                Quantum.PrintStateTop();
+                break;
+
+            case "EXPECT":
+                Quantum.ExpectTop();
                 break;
 
             case "RESET":
                 Quantum.Reset();
-                Console.WriteLine("Reset to |0⟩.");
+                Console.WriteLine("Reset to |00..0⟩.");
                 break;
+
+            case "MEASUREALL":
+                {
+                    int outcome = Quantum.MeasureAll();
+                    Console.WriteLine($"Measured: |{Quantum.Register.BitString(outcome)}⟩ (state collapsed)");
+                    break;
+                }
 
             case "MEASURE":
-                int outcome = Quantum.Measure();
-                Console.WriteLine($"Measured: {outcome} (state collapsed to |{outcome}⟩)");
-                break;
+                {
+                    if (parts.Length == 1)
+                        throw new ArgumentException("Usage: MEASURE <q>   (e.g. MEASURE 0). Use MEASUREALL to measure full register.");
 
-            case "X": Quantum.X(); break;
-            case "Y": Quantum.Y(); break;
-            case "Z": Quantum.Z(); break;
-            case "H": Quantum.H(); break;
-            case "S": Quantum.S(); break;
-            case "T": Quantum.T(); break;
+                    int q = ParseQubit(parts, 1);
+                    int bit = Quantum.Measure(q);
+                    Console.WriteLine($"Measured qubit {q}: {bit} (partial collapse)");
+                    break;
+                }
+
+            // 1-qubit gates now require target: e.g. H 0
+            case "X": Quantum.X(ParseQubit(parts, 1)); break;
+            case "Y": Quantum.Y(ParseQubit(parts, 1)); break;
+            case "Z": Quantum.Z(ParseQubit(parts, 1)); break;
+            case "H": Quantum.H(ParseQubit(parts, 1)); break;
+            case "S": Quantum.S(ParseQubit(parts, 1)); break;
+            case "T": Quantum.T(ParseQubit(parts, 1)); break;
 
             case "RX":
-                Quantum.RX(ParseAngle(parts, 1));
+                Quantum.RX(ParseQubit(parts, 1), ParseAngle(parts, 2));
                 break;
 
             case "RY":
-                Quantum.RY(ParseAngle(parts, 1));
+                Quantum.RY(ParseQubit(parts, 1), ParseAngle(parts, 2));
                 break;
 
             case "RZ":
-                Quantum.RZ(ParseAngle(parts, 1));
+                Quantum.RZ(ParseQubit(parts, 1), ParseAngle(parts, 2));
                 break;
+
+            case "QRAND":
+                {
+                    n = Quantum.Register.QubitCount;
+                    int k = n;
+
+                    // QRAND <k> optional
+                    if (parts.Length >= 2)
+                    {
+                        if (!int.TryParse(parts[1], out k) || k <= 0)
+                            throw new ArgumentException("Usage: QRAND [k]  where k is a positive integer (<= number of qubits).");
+
+                        if (k > n)
+                            throw new ArgumentException($"QRAND {k} requested, but register has only {n} qubits. Start with n >= {k}.");
+                    }
+
+                    // Prepare uniform superposition on ALL n qubits (not just k),
+                    // because MEASUREALL measures the full register.
+                    // (We then slice out k bits if requested.)
+                    Quantum.Reset();
+                    ApplyHadamardAll(n);
+
+                    int outcome = Quantum.MeasureAll();
+                    string bits = Quantum.Register.BitString(outcome);
+
+                    // Return k random bits (lowest k, i.e. qubits 0..k-1)
+                    string kBits = TakeLowBits(bits, k);
+
+                    // Also print integer value of those k bits (optional but handy)
+                    int value = Convert.ToInt32(kBits, 2);
+
+                    Console.WriteLine(kBits);
+                    Console.WriteLine($"(int: {value})");
+                    break;
+                }
 
             case "SAMPLE":
                 {
-                    if (parts.Length < 2 || !int.TryParse(parts[1], out int n) || n <= 0)
+                    if (parts.Length < 2 || !int.TryParse(parts[1], out int trials) || trials <= 0)
                         throw new ArgumentException("Usage: SAMPLE <n>   (e.g. SAMPLE 1000)");
 
-                    // Assume user has already prepared the state (e.g. applied H)
-                    // We'll repeatedly measure and then restore the pre-measurement state each time.
-                    // So: copy state, measure, restore, repeat.
-                    var a0 = Quantum.Alpha;
-                    var b0 = Quantum.Beta;
+                    var snap = Quantum.SnapshotState();
 
-                    int c0 = 0, c1 = 0;
-                    for (int i = 0; i < n; i++)
+                    var counts = new Dictionary<int, int>();
+                    for (int i = 0; i < trials; i++)
                     {
-                        outcome = Quantum.Measure();
-                        if (outcome == 0) c0++; else c1++;
-
-                        // restore original state for the next trial
-                        Quantum.SetState(a0, b0);
+                        int outcome = Quantum.MeasureAll();
+                        counts[outcome] = counts.TryGetValue(outcome, out var c) ? c + 1 : 1;
+                        Quantum.RestoreState(snap);
                     }
 
-                    Console.WriteLine($"Samples: {n}");
-                    Console.WriteLine($"0: {c0} ({(double)c0 / n:P2})");
-                    Console.WriteLine($"1: {c1} ({(double)c1 / n:P2})");
+                    Console.WriteLine($"Samples: {trials}");
+                    foreach (var kv in counts.OrderByDescending(kv => kv.Value).Take(16))
+                    {
+                        Console.WriteLine($"|{Quantum.Register.BitString(kv.Key)}⟩ : {kv.Value} ({(double)kv.Value / trials:P2})");
+                    }
+                    if (counts.Count > 16) Console.WriteLine("... (showing top 16 outcomes)");
                     break;
                 }
 
@@ -108,46 +163,59 @@ while (true)
     }
 }
 
+static int ParseQubit(string[] parts, int index)
+{
+    if (parts.Length <= index)
+        throw new ArgumentException("Missing qubit index. Example: H 0");
+
+    if (!int.TryParse(parts[index], out int q) || q < 0)
+        throw new ArgumentException("Qubit index must be a non-negative integer.");
+
+    return q;
+}
+
 static double ParseAngle(string[] parts, int index)
 {
     if (parts.Length <= index)
-        throw new ArgumentException("Missing angle. Example: RX 1.57079632679");
+        throw new ArgumentException("Missing angle. Example: RX 0 pi/2");
 
-    // Accept "pi" expressions lightly: e.g. "pi", "pi/2", "2*pi", "3*pi/4"
-    // If it doesn't match, fall back to normal double parsing.
     string token = parts[index].ToLowerInvariant();
 
     if (TryParsePiExpression(token, out double theta))
         return theta;
 
     if (!double.TryParse(parts[index], NumberStyles.Float, CultureInfo.InvariantCulture, out theta))
-        throw new ArgumentException("Angle must be a number (use invariant culture, e.g. 1.234) or a pi expression like pi/2.");
+        throw new ArgumentException("Angle must be a number (invariant culture) or a pi expression like pi/2.");
 
     return theta;
 }
 
+static void ApplyHadamardAll(int k)
+{
+    for (int q = 0; q < k; q++)
+        Quantum.H(q);
+}
+
+static string TakeLowBits(string bitString, int k)
+{
+    // bitString is MSB..LSB (your BitString() prints MSB left)
+    // qubit 0 is LSB, so "lowest k bits" are the rightmost k chars.
+    if (k <= 0) return "";
+    if (k >= bitString.Length) return bitString;
+    return bitString[^k..];
+}
+
 static bool TryParsePiExpression(string s, out double value)
 {
-    // Simple patterns:
-    //   pi
-    //   pi/2
-    //   2*pi
-    //   3*pi/4
-    //   -pi, -pi/2, etc.
     value = 0;
-
     s = s.Replace(" ", "");
     if (!s.Contains("pi")) return false;
 
-    // Normalize: replace "pi" with "*pi" when preceded by digit (e.g. "2pi" -> "2*pi")
     s = System.Text.RegularExpressions.Regex.Replace(s, @"(\d)pi", "$1*pi");
 
-    // Handle leading "pi" as "1*pi"
     if (s.StartsWith("pi", StringComparison.Ordinal))
         s = "1*" + s;
 
-    // Now attempt to parse forms: a*pi or a*pi/b
-    // Split by '/'
     string[] frac = s.Split('/', StringSplitOptions.RemoveEmptyEntries);
     if (frac.Length > 2) return false;
 
@@ -165,7 +233,6 @@ static bool TryParsePiExpression(string s, out double value)
 
     static double ParseAPi(string left)
     {
-        // left expected: something like "3*pi" or "-1*pi" or "0.5*pi"
         string[] mul = left.Split('*', StringSplitOptions.RemoveEmptyEntries);
         if (mul.Length == 1 && mul[0] == "pi") return Math.PI;
         if (mul.Length == 2 && mul[1] == "pi")
@@ -187,15 +254,18 @@ static bool TryParsePiExpression(string s, out double value)
 static void PrintHelp()
 {
     Console.WriteLine("Commands:");
-    Console.WriteLine("  EXPECT                    Show theoretical probabilities (no measurement)");
-    Console.WriteLine("  X, Y, Z, H, S, T          Apply standard single-qubit gates");
-    Console.WriteLine("  RX <theta>                Rotation about X (theta in radians, e.g. RX pi/2)");
-    Console.WriteLine("  RY <theta>                Rotation about Y");
-    Console.WriteLine("  RZ <theta>                Rotation about Z");
-    Console.WriteLine("  PRINT                     Show current state and probabilities");
-    Console.WriteLine("  MEASURE                   Measure in computational basis (collapses state)");
-    Console.WriteLine("  RESET                     Reset to |0>");
-    Console.WriteLine("  QUIT                      Exit");
+    Console.WriteLine("  EXPECT                     Show top basis probabilities (no measurement)");
+    Console.WriteLine("  X <q>, Y <q>, Z <q>         Apply Pauli gates to qubit q");
+    Console.WriteLine("  H <q>, S <q>, T <q>         Apply standard single-qubit gates to qubit q");
+    Console.WriteLine("  RX <q> <theta>              Rotation about X on qubit q (theta in radians, e.g. RX 0 pi/2)");
+    Console.WriteLine("  RY <q> <theta>              Rotation about Y");
+    Console.WriteLine("  RZ <q> <theta>              Rotation about Z");
+    Console.WriteLine("  PRINT                       Show top amplitudes/probabilities");
+    Console.WriteLine("  MEASUREALL (or MEASURE)     Measure full computational basis (collapses state)");
+    Console.WriteLine("  SAMPLE <n>                  Repeated measurement sampling (restores state each trial)");
+    Console.WriteLine("  RESET                       Reset to |00..0>");
+    Console.WriteLine("  QRAND [k]                  Generate k random bits (default k=n). Uses RESET; H all; MEASUREALL");
+    Console.WriteLine("  QUIT                        Exit");
     Console.WriteLine();
     Console.WriteLine("Angle formats:");
     Console.WriteLine("  1.57079632679   pi   pi/2   3*pi/4   -pi/8");
