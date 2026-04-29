@@ -69,6 +69,10 @@ while (true)
                     break;
                 }
 
+            case "MEM":
+                Quantum.PrintMemoryEstimate();
+                break;
+
             // 1-qubit gates now require target: e.g. H 0
             case "X": Quantum.X(ParseQubit(parts, 1)); break;
             case "Y": Quantum.Y(ParseQubit(parts, 1)); break;
@@ -185,7 +189,7 @@ static double ParseAngle(string[] parts, int index)
         return theta;
 
     if (!double.TryParse(parts[index], NumberStyles.Float, CultureInfo.InvariantCulture, out theta))
-        throw new ArgumentException("Angle must be a number (invariant culture) or a pi expression like pi/2.");
+        throw new ArgumentException("Angle must be a number or a pi expression like pi/2, -pi/8, or 3*pi/4.");
 
     return theta;
 }
@@ -207,54 +211,118 @@ static string TakeLowBits(string bitString, int k)
 
 static bool TryParsePiExpression(string s, out double value)
 {
-    value = 0;
-    s = s.Replace(" ", "");
-    if (!s.Contains("pi")) return false;
+    value = 0.0;
 
-    s = System.Text.RegularExpressions.Regex.Replace(s, @"(\d)pi", "$1*pi");
+    if (string.IsNullOrWhiteSpace(s))
+        return false;
 
-    if (s.StartsWith("pi", StringComparison.Ordinal))
-        s = "1*" + s;
+    s = s.Trim()
+         .ToLowerInvariant()
+         .Replace(" ", "");
 
-    string[] frac = s.Split('/', StringSplitOptions.RemoveEmptyEntries);
-    if (frac.Length > 2) return false;
+    if (!s.Contains("pi", StringComparison.Ordinal))
+        return false;
 
-    double numerator = ParseAPi(frac[0]);
-    double denom = 1.0;
+    try
+    {
+        return TryParsePiExpressionCore(s, out value);
+    }
+    catch
+    {
+        value = 0.0;
+        return false;
+    }
+}
+
+static bool TryParsePiExpressionCore(string s, out double value)
+{
+    value = 0.0;
+
+    // Split optional denominator: pi/2, -pi/8, 3*pi/4
+    var frac = s.Split('/', StringSplitOptions.RemoveEmptyEntries);
+
+    if (frac.Length is < 1 or > 2)
+        return false;
+
+    if (!TryParsePiNumerator(frac[0], out double numerator))
+        return false;
+
+    double denominator = 1.0;
 
     if (frac.Length == 2)
     {
-        if (!double.TryParse(frac[1], NumberStyles.Float, CultureInfo.InvariantCulture, out denom))
+        if (!double.TryParse(frac[1], NumberStyles.Float, CultureInfo.InvariantCulture, out denominator))
+            return false;
+
+        if (denominator == 0.0)
             return false;
     }
 
-    value = numerator / denom;
+    value = numerator / denominator;
     return true;
+}
 
-    static double ParseAPi(string left)
+static bool TryParsePiNumerator(string s, out double value)
+{
+    value = 0.0;
+
+    if (string.IsNullOrWhiteSpace(s))
+        return false;
+
+    // Accept: pi, +pi, -pi
+    if (s == "pi" || s == "+pi")
     {
-        string[] mul = left.Split('*', StringSplitOptions.RemoveEmptyEntries);
-        if (mul.Length == 1 && mul[0] == "pi") return Math.PI;
-        if (mul.Length == 2 && mul[1] == "pi")
-        {
-            if (!double.TryParse(mul[0], NumberStyles.Float, CultureInfo.InvariantCulture, out double a))
-                throw new ArgumentException("Bad pi expression.");
-            return a * Math.PI;
-        }
-        if (mul.Length == 2 && mul[0] == "pi")
-        {
-            if (!double.TryParse(mul[1], NumberStyles.Float, CultureInfo.InvariantCulture, out double a))
-                throw new ArgumentException("Bad pi expression.");
-            return a * Math.PI;
-        }
-        throw new ArgumentException("Bad pi expression.");
+        value = Math.PI;
+        return true;
     }
+
+    if (s == "-pi")
+    {
+        value = -Math.PI;
+        return true;
+    }
+
+    // Accept implicit multiplication:
+    // 3pi  -> 3*pi
+    // -3pi -> -3*pi
+    // +3pi -> +3*pi
+    s = System.Text.RegularExpressions.Regex.Replace(
+        s,
+        @"^([+-]?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)pi$",
+        "$1*pi"
+    );
+
+    // Accept: 3*pi, -3*pi, pi*3, pi*-3, 0.5*pi
+    var mul = s.Split('*', StringSplitOptions.RemoveEmptyEntries);
+
+    if (mul.Length != 2)
+        return false;
+
+    if (mul[0] == "pi")
+    {
+        if (!double.TryParse(mul[1], NumberStyles.Float, CultureInfo.InvariantCulture, out double factor))
+            return false;
+
+        value = Math.PI * factor;
+        return true;
+    }
+
+    if (mul[1] == "pi")
+    {
+        if (!double.TryParse(mul[0], NumberStyles.Float, CultureInfo.InvariantCulture, out double factor))
+            return false;
+
+        value = factor * Math.PI;
+        return true;
+    }
+
+    return false;
 }
 
 static void PrintHelp()
 {
     Console.WriteLine("Commands:");
-    Console.WriteLine("  EXPECT                     Show top basis probabilities (no measurement)");
+    Console.WriteLine("  EXPECT                      Show top basis probabilities (no measurement)");
     Console.WriteLine("  X <q>, Y <q>, Z <q>         Apply Pauli gates to qubit q");
     Console.WriteLine("  H <q>, S <q>, T <q>         Apply standard single-qubit gates to qubit q");
     Console.WriteLine("  RX <q> <theta>              Rotation about X on qubit q (theta in radians, e.g. RX 0 pi/2)");
@@ -262,11 +330,12 @@ static void PrintHelp()
     Console.WriteLine("  RZ <q> <theta>              Rotation about Z");
     Console.WriteLine("  PRINT                       Show top amplitudes/probabilities");
     Console.WriteLine("  MEASUREALL (or MEASURE)     Measure full computational basis (collapses state)");
+    Console.WriteLine("  MEM                         Show estimated dense state-vector memory usage");
     Console.WriteLine("  SAMPLE <n>                  Repeated measurement sampling (restores state each trial)");
     Console.WriteLine("  RESET                       Reset to |00..0>");
-    Console.WriteLine("  QRAND [k]                  Generate k random bits (default k=n). Uses RESET; H all; MEASUREALL");
+    Console.WriteLine("  QRAND [k]                   Generate k random bits (default k=n). Uses RESET; H all; MEASUREALL");
     Console.WriteLine("  QUIT                        Exit");
     Console.WriteLine();
     Console.WriteLine("Angle formats:");
-    Console.WriteLine("  1.57079632679   pi   pi/2   3*pi/4   -pi/8");
+    Console.WriteLine("  1.57079632679   pi   +pi/2   -pi/8   3*pi/4   -3*pi/4   0.5*pi");
 }

@@ -135,6 +135,41 @@ static class Quantum
         Register.Normalize();
     }
 
+    public static void PrintMemoryEstimate()
+    {
+        int n = Register.QubitCount;
+        long stateBytes = EstimateStateVectorBytes(n);
+
+        Console.WriteLine($"Qubits: {n}");
+        Console.WriteLine($"Amplitudes: 2^{n} = {Register.State.Length:N0}");
+        Console.WriteLine($"State vector only: {FormatBytes(stateBytes)}");
+        Console.WriteLine($"Snapshot copy: another {FormatBytes(stateBytes)}");
+        Console.WriteLine($"Probability array: approximately {FormatBytes(8L * Register.State.Length)}");
+    }
+
+    private static long EstimateStateVectorBytes(int qubitCount)
+    {
+        return 16L * (1L << qubitCount);
+    }
+
+    private static string FormatBytes(long bytes)
+    {
+        const double KiB = 1024.0;
+        const double MiB = KiB * 1024.0;
+        const double GiB = MiB * 1024.0;
+
+        if (bytes >= GiB)
+            return $"{bytes / GiB:F2} GiB";
+
+        if (bytes >= MiB)
+            return $"{bytes / MiB:F2} MiB";
+
+        if (bytes >= KiB)
+            return $"{bytes / KiB:F2} KiB";
+
+        return $"{bytes} bytes";
+    }
+
     private static string Fmt(Complex z)
     {
         double a = z.Real;
