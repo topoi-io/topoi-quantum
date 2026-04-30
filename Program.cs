@@ -1,5 +1,6 @@
 ﻿using QuantumComputer;
 using System.Globalization;
+using System.Numerics;
 
 Console.OutputEncoding = System.Text.Encoding.UTF8;
 
@@ -43,7 +44,21 @@ while (true)
                 break;
 
             case "EXPECT":
-                Quantum.ExpectTop();
+                {
+                    var terms = ParseObservableTerms(parts, 1);
+                    Complex value = Quantum.ExpectPauliString(terms);
+
+                    Console.WriteLine($"⟨{FormatObservable(terms)}⟩ = {value.Real:+0.############;-0.############;0}");
+
+                    if (Math.Abs(value.Imaginary) > 1e-10)
+                        Console.WriteLine($"  note: small imaginary residue = {value.Imaginary:+0.###e+0;-0.###e+0;0}");
+
+                    break;
+                }
+
+            case "PROBS":
+            case "PROBABILITIES":
+                Quantum.PrintProbabilitiesTop();
                 break;
 
             case "RESET":
@@ -319,16 +334,120 @@ static bool TryParsePiNumerator(string s, out double value)
     return false;
 }
 
+static Quantum.PauliTerm[] ParseObservableTerms(string[] parts, int index)
+{
+    if (parts.Length <= index)
+        throw new ArgumentException(
+            "Usage: EXPECT <observable>. Examples: EXPECT Z 0, EXPECT X 1, EXPECT ZZ 0 1, EXPECT Z0 Z1");
+
+    var terms = new List<Quantum.PauliTerm>();
+    int i = index;
+
+    while (i < parts.Length)
+    {
+        string token = parts[i].Trim().ToUpperInvariant();
+
+        // Supports compact form: Z0, X1, Y2, I3
+        if (TryParsePauliWithIndex(token, out char compactPauli, out int compactQubit))
+        {
+            terms.Add(new Quantum.PauliTerm(compactPauli, compactQubit));
+            i++;
+            continue;
+        }
+
+        // Supports separated form: Z 0
+        // Supports grouped form: ZZ 0 1, ZX 0 1
+        if (IsPauliLetters(token))
+        {
+            if (token.Length == 1)
+            {
+                if (i + 1 >= parts.Length)
+                    throw new ArgumentException($"Missing qubit index after {token}. Example: EXPECT {token} 0");
+
+                int q = ParseQubit(parts, i + 1);
+                terms.Add(new Quantum.PauliTerm(token[0], q));
+                i += 2;
+                continue;
+            }
+
+            // Example: EXPECT ZZ 0 1
+            if (i + token.Length >= parts.Length)
+                throw new ArgumentException($"Observable {token} needs {token.Length} qubit indices.");
+
+            for (int k = 0; k < token.Length; k++)
+            {
+                int q = ParseQubit(parts, i + 1 + k);
+                terms.Add(new Quantum.PauliTerm(token[k], q));
+            }
+
+            i += 1 + token.Length;
+            continue;
+        }
+
+        throw new ArgumentException(
+            $"Bad observable token '{parts[i]}'. Use forms like EXPECT Z 0, EXPECT ZZ 0 1, or EXPECT Z0 Z1.");
+    }
+
+    if (terms.Count == 0)
+        throw new ArgumentException("No observable supplied.");
+
+    return terms.ToArray();
+}
+
+static bool IsPauliLetters(string token)
+{
+    if (string.IsNullOrWhiteSpace(token))
+        return false;
+
+    foreach (char c in token)
+    {
+        if (c is not ('I' or 'X' or 'Y' or 'Z'))
+            return false;
+    }
+
+    return true;
+}
+
+static bool TryParsePauliWithIndex(string token, out char pauli, out int qubit)
+{
+    pauli = '\0';
+    qubit = -1;
+
+    if (token.Length < 2)
+        return false;
+
+    char p = token[0];
+
+    if (p is not ('I' or 'X' or 'Y' or 'Z'))
+        return false;
+
+    string qText = token[1..];
+
+    if (!int.TryParse(qText, out int q) || q < 0)
+        return false;
+
+    pauli = p;
+    qubit = q;
+    return true;
+}
+
+static string FormatObservable(IReadOnlyList<Quantum.PauliTerm> terms)
+{
+    return string.Join(" ⊗ ", terms.Select(t => $"{t.Pauli}{t.Qubit}"));
+}
+
 static void PrintHelp()
 {
     Console.WriteLine("Commands:");
-    Console.WriteLine("  EXPECT                      Show top basis probabilities (no measurement)");
+    Console.WriteLine("  EXPECT <observable>         Expectation value of Pauli observable");
+    Console.WriteLine("                             Examples: EXPECT Z 0, EXPECT X 1, EXPECT ZZ 0 1, EXPECT Z0 Z1");
+    Console.WriteLine("  PROBS                       Show top basis probabilities without measurement");
     Console.WriteLine("  X <q>, Y <q>, Z <q>         Apply Pauli gates to qubit q");
     Console.WriteLine("  H <q>, S <q>, T <q>         Apply standard single-qubit gates to qubit q");
     Console.WriteLine("  RX <q> <theta>              Rotation about X on qubit q (theta in radians, e.g. RX 0 pi/2)");
     Console.WriteLine("  RY <q> <theta>              Rotation about Y");
     Console.WriteLine("  RZ <q> <theta>              Rotation about Z");
-    Console.WriteLine("  PRINT                       Show top amplitudes/probabilities");
+    Console.WriteLine("  PRINT                       Show top amplitudes and probabilities");
     Console.WriteLine("  MEASUREALL (or MEASURE)     Measure full computational basis (collapses state)");
     Console.WriteLine("  MEM                         Show estimated dense state-vector memory usage");
     Console.WriteLine("  SAMPLE <n>                  Repeated measurement sampling (restores state each trial)");

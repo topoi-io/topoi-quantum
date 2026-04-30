@@ -2,13 +2,17 @@
 
 namespace QuantumComputer;
 
-static class Quantum
+public static class Quantum
 {
     public static QuantumRegister Register { get; private set; } = new QuantumRegister(1);
+    public readonly record struct PauliTerm(char Pauli, int Qubit);
 
     public static void Init(int n) => Register = new QuantumRegister(n);
 
     public static void Reset() => Register.Reset();
+
+    public static Complex ExpectPauliString(IReadOnlyList<PauliTerm> terms)
+    => Register.ExpectPauliString(terms);
 
     // Apply a 2x2 matrix gate to target qubit t (0 = LSB)
     public static void Apply1(int t, Complex m00, Complex m01, Complex m10, Complex m11)
@@ -92,7 +96,7 @@ static class Quantum
 
     public static int Measure(int q) => Register.MeasureQubit(q);
 
-    public static void ExpectTop(int top = 16)
+    public static void PrintProbabilitiesTop(int top = 16)
     {
         var p = Register.Probabilities();
         var idx = Enumerable.Range(0, p.Length)

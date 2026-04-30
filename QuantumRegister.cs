@@ -81,7 +81,10 @@ public sealed class QuantumRegister
         double r = NextUnitDouble() * total;
         double acc = 0.0;
 
-        int picked = State.Length - 1; // absorbs tiny rounding residue
+        // Important:
+        // If rounding prevents r < acc from triggering,
+        // the final valid bucket absorbs the residue.
+        int picked = State.Length - 1;
 
         for (int i = 0; i < State.Length; i++)
         {
@@ -160,6 +163,67 @@ public sealed class QuantumRegister
     public string BitString(int basisIndex)
         => Convert.ToString(basisIndex, 2).PadLeft(QubitCount, '0');
 
+    public Complex ExpectPauliString(IReadOnlyList<Quantum.PauliTerm> terms)
+    {
+        if (terms.Count == 0)
+            throw new ArgumentException("Observable must contain at least one Pauli term.", nameof(terms));
+
+        ValidatePauliTerms(terms);
+
+        Complex numerator = Complex.Zero;
+        double denominator = 0.0;
+
+        for (int i = 0; i < State.Length; i++)
+        {
+            Complex amplitude = State[i];
+
+            denominator += NormSquared(amplitude);
+
+            int mappedIndex = i;
+            Complex phase = Complex.One;
+
+            foreach (var term in terms)
+            {
+                int mask = 1 << term.Qubit;
+                bool bitIs1 = (mappedIndex & mask) != 0;
+
+                switch (term.Pauli)
+                {
+                    case 'I':
+                        break;
+
+                    case 'X':
+                        mappedIndex ^= mask;
+                        break;
+
+                    case 'Y':
+                        // Y|0⟩ = i|1⟩
+                        // Y|1⟩ = -i|0⟩
+                        phase *= bitIs1 ? -Complex.ImaginaryOne : Complex.ImaginaryOne;
+                        mappedIndex ^= mask;
+                        break;
+
+                    case 'Z':
+                        // Z|0⟩ = |0⟩
+                        // Z|1⟩ = -|1⟩
+                        if (bitIs1)
+                            phase = -phase;
+                        break;
+
+                    default:
+                        throw new ArgumentException($"Unsupported Pauli operator '{term.Pauli}'.");
+                }
+            }
+
+            numerator += Complex.Conjugate(amplitude) * phase * State[mappedIndex];
+        }
+
+        if (denominator <= 0.0)
+            throw new InvalidOperationException("State has zero norm.");
+
+        return numerator / denominator;
+    }
+
     private double NextUnitDouble()
     {
         int x = RandomNumberGenerator.GetInt32(int.MaxValue);
@@ -208,5 +272,26 @@ public sealed class QuantumRegister
             return $"{bytes / KiB:F2} KiB";
 
         return $"{bytes} bytes";
+    }
+
+    private void ValidatePauliTerms(IReadOnlyList<Quantum.PauliTerm> terms)
+    {
+        var usedQubits = new HashSet<int>();
+
+        foreach (var term in terms)
+        {
+            if (term.Pauli is not ('I' or 'X' or 'Y' or 'Z'))
+                throw new ArgumentException($"Unsupported Pauli operator '{term.Pauli}'. Use I, X, Y, or Z.");
+
+            if ((uint)term.Qubit >= (uint)QubitCount)
+                throw new ArgumentOutOfRangeException(
+                    nameof(term.Qubit),
+                    $"Qubit index {term.Qubit} is out of range. Must be 0..{QubitCount - 1}");
+
+            if (!usedQubits.Add(term.Qubit))
+                throw new ArgumentException(
+                    $"Observable contains more than one Pauli operator on qubit {term.Qubit}. " +
+                    $"Use one operator per qubit, e.g. Z0 X1, not Z0 X0.");
+        }
     }
 }
