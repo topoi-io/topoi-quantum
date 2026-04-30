@@ -33,10 +33,28 @@ while (true)
     if (line is null)
         break;
 
-    line = line.Trim();
+    try
+    {
+        bool shouldExit = ExecuteCommand(line, echo: false);
+
+        if (shouldExit)
+            return;
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Error: {ex.Message}");
+    }
+}
+
+static bool ExecuteCommand(string line, bool echo)
+{
+    line = StripComment(line).Trim();
 
     if (line.Length == 0)
-        continue;
+        return false;
+
+    if (echo)
+        Console.WriteLine($"> {line}");
 
     string[] parts = line.Split(
         ' ',
@@ -44,174 +62,238 @@ while (true)
 
     string cmd = parts[0].ToUpperInvariant();
 
-    try
+    switch (cmd)
     {
-        switch (cmd)
+        case "HELP":
+            PrintHelp();
+            break;
+
+        case "PRINT":
+            Quantum.PrintStateTop();
+            break;
+
+        case "PROBS":
+        case "PROBABILITIES":
+            Quantum.PrintProbabilitiesTop();
+            break;
+
+        case "EXPECT":
+            {
+                PauliTerm[] terms = ParseObservableTerms(parts, 1);
+                Complex value = Quantum.ExpectPauliString(terms);
+
+                Console.WriteLine($"⟨{FormatObservable(terms)}⟩ = {value.Real:+0.############;-0.############;0}");
+
+                if (Math.Abs(value.Imaginary) > 1e-10)
+                    Console.WriteLine($"  note: small imaginary residue = {value.Imaginary:+0.###e+0;-0.###e+0;0}");
+
+                break;
+            }
+
+        case "RESET":
+            Quantum.Reset();
+            Console.WriteLine("Reset to |00..0⟩.");
+            break;
+
+        case "MEASUREALL":
+            {
+                int outcome = Quantum.MeasureAll();
+                Console.WriteLine($"Measured: |{Quantum.Register.BitString(outcome)}⟩ (state collapsed)");
+                break;
+            }
+
+        case "MEASURE":
+            {
+                if (parts.Length == 1)
+                    throw new ArgumentException("Usage: MEASURE <q>   Example: MEASURE 0");
+
+                int q = ParseQubit(parts, 1);
+                int bit = Quantum.Measure(q);
+
+                Console.WriteLine($"Measured qubit {q}: {bit} (partial collapse)");
+                break;
+            }
+
+        case "MEM":
+            Quantum.PrintMemoryEstimate();
+            break;
+
+        case "NORM":
+            Quantum.PrintNorm();
+            break;
+
+        case "NORMALIZE":
+            Quantum.Normalize();
+            Console.WriteLine("State normalized.");
+            break;
+
+        // Single-qubit gates
+        case "X":
+            Quantum.X(ParseQubit(parts, 1));
+            break;
+
+        case "Y":
+            Quantum.Y(ParseQubit(parts, 1));
+            break;
+
+        case "Z":
+            Quantum.Z(ParseQubit(parts, 1));
+            break;
+
+        case "H":
+            Quantum.H(ParseQubit(parts, 1));
+            break;
+
+        case "S":
+            Quantum.S(ParseQubit(parts, 1));
+            break;
+
+        case "T":
+            Quantum.T(ParseQubit(parts, 1));
+            break;
+
+        case "RX":
+            Quantum.RX(ParseQubit(parts, 1), ParseAngle(parts, 2));
+            break;
+
+        case "RY":
+            Quantum.RY(ParseQubit(parts, 1), ParseAngle(parts, 2));
+            break;
+
+        case "RZ":
+            Quantum.RZ(ParseQubit(parts, 1), ParseAngle(parts, 2));
+            break;
+
+        // Entangling / controlled gates
+        case "CX":
+        case "CNOT":
+            Quantum.CX(ParseQubit(parts, 1), ParseQubit(parts, 2));
+            break;
+
+        case "CZ":
+            Quantum.CZ(ParseQubit(parts, 1), ParseQubit(parts, 2));
+            break;
+
+        case "SWAP":
+            Quantum.SWAP(ParseQubit(parts, 1), ParseQubit(parts, 2));
+            break;
+
+        case "CCX":
+        case "TOFFOLI":
+            Quantum.CCX(
+                ParseQubit(parts, 1),
+                ParseQubit(parts, 2),
+                ParseQubit(parts, 3));
+            break;
+
+        case "CRX":
+            Quantum.CRX(
+                ParseQubit(parts, 1),
+                ParseQubit(parts, 2),
+                ParseAngle(parts, 3));
+            break;
+
+        case "CRY":
+            Quantum.CRY(
+                ParseQubit(parts, 1),
+                ParseQubit(parts, 2),
+                ParseAngle(parts, 3));
+            break;
+
+        case "CRZ":
+            Quantum.CRZ(
+                ParseQubit(parts, 1),
+                ParseQubit(parts, 2),
+                ParseAngle(parts, 3));
+            break;
+
+        case "QRAND":
+            RunQRand(parts);
+            break;
+
+        case "SAMPLE":
+            RunSample(parts);
+            break;
+
+        case "RUN":
+            RunScript(parts);
+            break;
+
+        case "QUIT":
+        case "EXIT":
+            return true;
+
+        default:
+            Console.WriteLine($"Unknown command: {cmd}. Type HELP.");
+            break;
+    }
+
+    return false;
+}
+
+static void RunScript(string[] parts)
+{
+    if (parts.Length < 2)
+        throw new ArgumentException("Usage: RUN <path>   Example: RUN examples/bell.qc");
+
+    string path = ReconstructPath(parts, 1);
+
+    if (!File.Exists(path))
+        throw new FileNotFoundException($"Script file not found: {path}");
+
+    Console.WriteLine($"Running script: {path}");
+
+    string[] lines = File.ReadAllLines(path);
+
+    for (int i = 0; i < lines.Length; i++)
+    {
+        string rawLine = lines[i];
+
+        try
         {
-            case "HELP":
-                PrintHelp();
-                break;
+            bool shouldExit = ExecuteCommand(rawLine, echo: true);
 
-            case "PRINT":
-                Quantum.PrintStateTop();
-                break;
-
-            case "PROBS":
-            case "PROBABILITIES":
-                Quantum.PrintProbabilitiesTop();
-                break;
-
-            case "EXPECT":
-                {
-                    PauliTerm[] terms = ParseObservableTerms(parts, 1);
-                    Complex value = Quantum.ExpectPauliString(terms);
-
-                    Console.WriteLine($"⟨{FormatObservable(terms)}⟩ = {value.Real:+0.############;-0.############;0}");
-
-                    if (Math.Abs(value.Imaginary) > 1e-10)
-                        Console.WriteLine($"  note: small imaginary residue = {value.Imaginary:+0.###e+0;-0.###e+0;0}");
-
-                    break;
-                }
-
-            case "RESET":
-                Quantum.Reset();
-                Console.WriteLine("Reset to |00..0⟩.");
-                break;
-
-            case "MEASUREALL":
-                {
-                    int outcome = Quantum.MeasureAll();
-                    Console.WriteLine($"Measured: |{Quantum.Register.BitString(outcome)}⟩ (state collapsed)");
-                    break;
-                }
-
-            case "MEASURE":
-                {
-                    if (parts.Length == 1)
-                        throw new ArgumentException("Usage: MEASURE <q>   Example: MEASURE 0");
-
-                    int q = ParseQubit(parts, 1);
-                    int bit = Quantum.Measure(q);
-
-                    Console.WriteLine($"Measured qubit {q}: {bit} (partial collapse)");
-                    break;
-                }
-
-            case "MEM":
-                Quantum.PrintMemoryEstimate();
-                break;
-
-            case "NORM":
-                Quantum.PrintNorm();
-                break;
-
-            case "NORMALIZE":
-                Quantum.Normalize();
-                Console.WriteLine("State normalized.");
-                break;
-
-            // Single-qubit gates
-            case "X":
-                Quantum.X(ParseQubit(parts, 1));
-                break;
-
-            case "Y":
-                Quantum.Y(ParseQubit(parts, 1));
-                break;
-
-            case "Z":
-                Quantum.Z(ParseQubit(parts, 1));
-                break;
-
-            case "H":
-                Quantum.H(ParseQubit(parts, 1));
-                break;
-
-            case "S":
-                Quantum.S(ParseQubit(parts, 1));
-                break;
-
-            case "T":
-                Quantum.T(ParseQubit(parts, 1));
-                break;
-
-            case "RX":
-                Quantum.RX(ParseQubit(parts, 1), ParseAngle(parts, 2));
-                break;
-
-            case "RY":
-                Quantum.RY(ParseQubit(parts, 1), ParseAngle(parts, 2));
-                break;
-
-            case "RZ":
-                Quantum.RZ(ParseQubit(parts, 1), ParseAngle(parts, 2));
-                break;
-
-            // Entangling / controlled gates
-            case "CX":
-            case "CNOT":
-                Quantum.CX(ParseQubit(parts, 1), ParseQubit(parts, 2));
-                break;
-
-            case "CZ":
-                Quantum.CZ(ParseQubit(parts, 1), ParseQubit(parts, 2));
-                break;
-
-            case "SWAP":
-                Quantum.SWAP(ParseQubit(parts, 1), ParseQubit(parts, 2));
-                break;
-
-            case "CCX":
-            case "TOFFOLI":
-                Quantum.CCX(
-                    ParseQubit(parts, 1),
-                    ParseQubit(parts, 2),
-                    ParseQubit(parts, 3));
-                break;
-
-            case "CRX":
-                Quantum.CRX(
-                    ParseQubit(parts, 1),
-                    ParseQubit(parts, 2),
-                    ParseAngle(parts, 3));
-                break;
-
-            case "CRY":
-                Quantum.CRY(
-                    ParseQubit(parts, 1),
-                    ParseQubit(parts, 2),
-                    ParseAngle(parts, 3));
-                break;
-
-            case "CRZ":
-                Quantum.CRZ(
-                    ParseQubit(parts, 1),
-                    ParseQubit(parts, 2),
-                    ParseAngle(parts, 3));
-                break;
-
-            case "QRAND":
-                RunQRand(parts);
-                break;
-
-            case "SAMPLE":
-                RunSample(parts);
-                break;
-
-            case "QUIT":
-            case "EXIT":
+            if (shouldExit)
+            {
+                Console.WriteLine($"Script requested exit at line {i + 1}.");
                 return;
-
-            default:
-                Console.WriteLine($"Unknown command: {cmd}. Type HELP.");
-                break;
+            }
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException(
+                $"Script error in '{path}' at line {i + 1}: {ex.Message}\n" +
+                $"Line: {rawLine}");
         }
     }
-    catch (Exception ex)
+
+    Console.WriteLine($"Finished script: {path}");
+}
+
+static string StripComment(string line)
+{
+    int hash = line.IndexOf('#');
+
+    if (hash < 0)
+        return line;
+
+    return line[..hash];
+}
+
+static string ReconstructPath(string[] parts, int startIndex)
+{
+    string path = string.Join(' ', parts.Skip(startIndex)).Trim();
+
+    if (path.Length == 0)
+        throw new ArgumentException("Missing script path.");
+
+    if ((path.StartsWith('"') && path.EndsWith('"')) ||
+        (path.StartsWith('\'') && path.EndsWith('\'')))
     {
-        Console.WriteLine($"Error: {ex.Message}");
+        path = path[1..^1];
     }
+
+    return path;
 }
 
 static int ParseQubit(string[] parts, int index)
@@ -567,6 +649,7 @@ static void PrintHelp()
     Console.WriteLine("Other:");
     Console.WriteLine("  RESET                       Reset to |00..0>");
     Console.WriteLine("  QRAND [k]                   Generate k random bits, default k = number of qubits");
+    Console.WriteLine("  RUN <path>                  Run commands from a .qc script file");
     Console.WriteLine("  QUIT                        Exit");
 
     Console.WriteLine();
