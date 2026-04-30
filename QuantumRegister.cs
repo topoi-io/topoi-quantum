@@ -67,7 +67,6 @@ public sealed class QuantumRegister
         return p;
     }
 
-    // Measure full computational-basis state; collapses to |picked>
     public int MeasureAll()
     {
         double total = 0.0;
@@ -81,9 +80,7 @@ public sealed class QuantumRegister
         double r = NextUnitDouble() * total;
         double acc = 0.0;
 
-        // Important:
-        // If rounding prevents r < acc from triggering,
-        // the final valid bucket absorbs the residue.
+        // Final bucket absorbs any floating-point rounding residue.
         int picked = State.Length - 1;
 
         for (int i = 0; i < State.Length; i++)
@@ -163,7 +160,7 @@ public sealed class QuantumRegister
     public string BitString(int basisIndex)
         => Convert.ToString(basisIndex, 2).PadLeft(QubitCount, '0');
 
-    public Complex ExpectPauliString(IReadOnlyList<Quantum.PauliTerm> terms)
+    public Complex ExpectPauliString(IReadOnlyList<PauliTerm> terms)
     {
         if (terms.Count == 0)
             throw new ArgumentException("Observable must contain at least one Pauli term.", nameof(terms));
@@ -224,18 +221,124 @@ public sealed class QuantumRegister
         return numerator / denominator;
     }
 
-    private double NextUnitDouble()
+    public void ApplyControlled1(
+        IReadOnlyList<int> controls,
+        int target,
+        Complex m00,
+        Complex m01,
+        Complex m10,
+        Complex m11)
+    {
+        ValidateControlledGate(controls, target);
+
+        int targetMask = 1 << target;
+        int[] controlMasks = controls.Select(c => 1 << c).ToArray();
+
+        for (int i0 = 0; i0 < State.Length; i0++)
+        {
+            // Only process each target pair once: target bit must be 0.
+            if ((i0 & targetMask) != 0)
+                continue;
+
+            bool controlsActive = true;
+
+            for (int c = 0; c < controlMasks.Length; c++)
+            {
+                if ((i0 & controlMasks[c]) == 0)
+                {
+                    controlsActive = false;
+                    break;
+                }
+            }
+
+            if (!controlsActive)
+                continue;
+
+            int i1 = i0 | targetMask;
+
+            Complex a = State[i0];
+            Complex b = State[i1];
+
+            State[i0] = m00 * a + m01 * b;
+            State[i1] = m10 * a + m11 * b;
+        }
+    }
+
+    public void ApplyCZ(int control, int target)
+    {
+        ValidateTwoDistinctQubits(control, target);
+
+        int controlMask = 1 << control;
+        int targetMask = 1 << target;
+
+        for (int i = 0; i < State.Length; i++)
+        {
+            bool controlIs1 = (i & controlMask) != 0;
+            bool targetIs1 = (i & targetMask) != 0;
+
+            if (controlIs1 && targetIs1)
+                State[i] = -State[i];
+        }
+    }
+
+    public void ApplySWAP(int q1, int q2)
+    {
+        ValidateTwoDistinctQubits(q1, q2);
+
+        int mask1 = 1 << q1;
+        int mask2 = 1 << q2;
+
+        for (int i = 0; i < State.Length; i++)
+        {
+            bool b1 = (i & mask1) != 0;
+            bool b2 = (i & mask2) != 0;
+
+            // Only swap pairs where q1 = 0 and q2 = 1.
+            // This prevents swapping the same pair twice.
+            if (b1 || !b2)
+                continue;
+
+            int j = i ^ mask1 ^ mask2;
+
+            (State[i], State[j]) = (State[j], State[i]);
+        }
+    }
+
+    public double NormSquared()
+    {
+        double sum = 0.0;
+
+        for (int i = 0; i < State.Length; i++)
+            sum += NormSquared(State[i]);
+
+        return sum;
+    }
+
+    public void AssertNormalized(double tolerance = 1e-10)
+    {
+        double normSquared = NormSquared();
+
+        if (Math.Abs(normSquared - 1.0) > tolerance)
+            throw new InvalidOperationException($"State is not normalized. Norm² = {normSquared:R}");
+    }
+
+    public bool IsNormalized(double tolerance = 1e-10)
+    {
+        return Math.Abs(NormSquared() - 1.0) <= tolerance;
+    }
+
+    private static double NormSquared(Complex z)
+    {
+        return z.Real * z.Real + z.Imaginary * z.Imaginary;
+    }
+
+    private static double NextUnitDouble()
     {
         int x = RandomNumberGenerator.GetInt32(int.MaxValue);
         return x / (double)int.MaxValue;
     }
 
-    private double NormSquared(Complex z)
-    {
-        return z.Real * z.Real + z.Imaginary * z.Imaginary;
-    }
-
-    private void ValidateDenseStateVectorSize(int qubitCount)
+    private static void ValidateDenseStateVectorSize(int qubitCount)
     {
         if (qubitCount > DefaultMaxQubits)
         {
@@ -250,13 +353,13 @@ public sealed class QuantumRegister
         }
     }
 
-    private long EstimateStateVectorBytes(int qubitCount)
+    private static long EstimateStateVectorBytes(int qubitCount)
     {
         // Complex = two doubles = 16 bytes
         return 16L * (1L << qubitCount);
     }
 
-    private string FormatBytes(long bytes)
+    private static string FormatBytes(long bytes)
     {
         const double KiB = 1024.0;
         const double MiB = KiB * 1024.0;
@@ -274,7 +377,7 @@ public sealed class QuantumRegister
         return $"{bytes} bytes";
     }
 
-    private void ValidatePauliTerms(IReadOnlyList<Quantum.PauliTerm> terms)
+    private void ValidatePauliTerms(IReadOnlyList<PauliTerm> terms)
     {
         var usedQubits = new HashSet<int>();
 
@@ -293,5 +396,40 @@ public sealed class QuantumRegister
                     $"Observable contains more than one Pauli operator on qubit {term.Qubit}. " +
                     $"Use one operator per qubit, e.g. Z0 X1, not Z0 X0.");
         }
+    }
+
+    private void ValidateControlledGate(IReadOnlyList<int> controls, int target)
+    {
+        if ((uint)target >= (uint)QubitCount)
+            throw new ArgumentOutOfRangeException(nameof(target), $"Target qubit must be 0..{QubitCount - 1}");
+
+        if (controls.Count == 0)
+            throw new ArgumentException("Controlled gate must have at least one control qubit.", nameof(controls));
+
+        var seen = new HashSet<int>();
+
+        foreach (int control in controls)
+        {
+            if ((uint)control >= (uint)QubitCount)
+                throw new ArgumentOutOfRangeException(nameof(controls), $"Control qubit {control} must be 0..{QubitCount - 1}");
+
+            if (control == target)
+                throw new ArgumentException("Control and target qubits must be different.");
+
+            if (!seen.Add(control))
+                throw new ArgumentException($"Duplicate control qubit: {control}");
+        }
+    }
+
+    private void ValidateTwoDistinctQubits(int q1, int q2)
+    {
+        if ((uint)q1 >= (uint)QubitCount)
+            throw new ArgumentOutOfRangeException(nameof(q1), $"Qubit index {q1} must be 0..{QubitCount - 1}");
+
+        if ((uint)q2 >= (uint)QubitCount)
+            throw new ArgumentOutOfRangeException(nameof(q2), $"Qubit index {q2} must be 0..{QubitCount - 1}");
+
+        if (q1 == q2)
+            throw new ArgumentException("Qubits must be different.");
     }
 }
