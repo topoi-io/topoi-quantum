@@ -6,6 +6,36 @@ namespace QuantumComputer.Tests;
 public sealed class QuantumCircuitTests
 {
     [Test]
+    public void Circuit_Add_RejectsWrongQubitCount()
+    {
+        var circuit = new QuantumCircuit(2);
+
+        Assert.Throws<ArgumentException>(() =>
+            circuit.Add(new GateOperation(GateKind.CX, new[] { 0 })));
+
+        Assert.Throws<ArgumentException>(() =>
+            circuit.Add(new GateOperation(GateKind.X, new[] { 0, 1 })));
+    }
+
+    [Test]
+    public void Circuit_Add_RejectsMissingAngleForRotationGate()
+    {
+        var circuit = new QuantumCircuit(1);
+
+        Assert.Throws<ArgumentException>(() =>
+            circuit.Add(new GateOperation(GateKind.RX, new[] { 0 })));
+    }
+
+    [Test]
+    public void Circuit_Add_RejectsAngleForNonRotationGate()
+    {
+        var circuit = new QuantumCircuit(1);
+
+        Assert.Throws<ArgumentException>(() =>
+            circuit.Add(new GateOperation(GateKind.H, new[] { 0 }, Math.PI)));
+    }
+
+    [Test]
     public void Circuit_Run_CreatesBellState()
     {
         var circuit = new QuantumCircuit(2);
@@ -76,5 +106,22 @@ public sealed class QuantumCircuitTests
 
         Assert.Throws<ArgumentException>(() =>
             circuit.Add(new GateOperation(GateKind.CX, new[] { 0, 0 })));
+    }
+
+    [Test]
+    public void Circuit_Run_WithoutReset_ComposesWithExistingState()
+    {
+        Quantum.Init(1);
+        Quantum.Reset();
+
+        Quantum.X(0);
+
+        var circuit = new QuantumCircuit(1);
+        circuit.Add(new GateOperation(GateKind.X, new[] { 0 }));
+
+        circuit.Run(resetFirst: false);
+
+        TestHelpers.AssertProbability(0, 1.0);
+        TestHelpers.AssertProbability(1, 0.0);
     }
 }

@@ -17,14 +17,8 @@ public static class CircuitDrawer
 
         int labelWidth = Math.Max(2, circuit.QubitCount.ToString().Length + 1);
 
-        // We use 2n - 1 rows:
-        // q0 row
-        // connector row between q0 and q1
-        // q1 row
-        // connector row between q1 and q2
-        // q2 row
         int rowCount = (circuit.QubitCount * 2) - 1;
-        var rows = new string[rowCount];
+        var rows = new string?[rowCount];
 
         for (int q = 0; q < circuit.QubitCount; q++)
         {
@@ -32,12 +26,17 @@ public static class CircuitDrawer
             rows[row] = $"q{q.ToString().PadRight(labelWidth - 1)}: ";
         }
 
-        string blankPrefix = new string(' ', labelWidth + 3);
+        int prefixWidth = rows
+            .Where(row => row is not null)
+            .Max(row => row!.Length);
+
+        string blankPrefix = new string(' ', prefixWidth);
 
         for (int row = 0; row < rowCount; row++)
         {
-            if (rows[row] is null)
-                rows[row] = blankPrefix;
+            rows[row] = rows[row] is null
+                ? blankPrefix
+                : rows[row]!.PadRight(prefixWidth);
         }
 
         foreach (GateOperation operation in circuit.Operations)

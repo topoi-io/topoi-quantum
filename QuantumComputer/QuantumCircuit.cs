@@ -18,16 +18,27 @@ public sealed class QuantumCircuit
 
     public void Add(GateOperation operation)
     {
-        ValidateOperation(operation);
+        operation.ValidateForCircuit(QubitCount);
         _operations.Add(operation);
     }
 
     public void Run(bool resetFirst = true)
     {
-        Quantum.Init(QubitCount);
+        if (Quantum.Register.QubitCount != QubitCount)
+        {
+            if (!resetFirst)
+            {
+                throw new InvalidOperationException(
+                    "Cannot run circuit without reset because the current simulator register " +
+                    $"has {Quantum.Register.QubitCount} qubits but the circuit requires {QubitCount}.");
+            }
 
-        if (resetFirst)
+            Quantum.Init(QubitCount);
+        }
+        else if (resetFirst)
+        {
             Quantum.Reset();
+        }
 
         foreach (GateOperation operation in _operations)
             operation.Apply();

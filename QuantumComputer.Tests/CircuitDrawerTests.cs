@@ -25,6 +25,25 @@ public sealed class CircuitDrawerTests
     }
 
     [Test]
+    public void Draw_BellCircuit_VerticalConnectorAlignsWithControlAndTarget()
+    {
+        var circuit = new QuantumCircuit(2);
+
+        circuit.Add(new GateOperation(GateKind.H, new[] { 0 }));
+        circuit.Add(new GateOperation(GateKind.CX, new[] { 0, 1 }));
+
+        string[] lines = circuit.Draw()
+            .Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
+
+        int controlColumn = lines[0].IndexOf('●');
+        int verticalColumn = lines[1].IndexOf('│');
+        int targetColumn = lines[2].IndexOf('X');
+
+        Assert.That(controlColumn, Is.EqualTo(verticalColumn));
+        Assert.That(targetColumn, Is.EqualTo(verticalColumn));
+    }
+
+    [Test]
     public void Draw_GHZCircuit_ContainsThreeQubitLines()
     {
         var circuit = new QuantumCircuit(3);

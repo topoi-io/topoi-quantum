@@ -2,8 +2,44 @@
 
 public sealed record GateOperation(GateKind Kind, IReadOnlyList<int> Qubits, double? Angle = null)
 {
+    public void ValidateForCircuit(int circuitQubitCount)
+    {
+        if (Qubits is null)
+            throw new ArgumentException("Gate operation qubit list cannot be null.");
+
+        GateSpec spec = GateSpecs.For(Kind);
+
+        if (Qubits.Count != spec.QubitCount)
+        {
+            throw new ArgumentException(
+                $"Gate {Kind} expects {spec.QubitCount} qubit(s), " +
+                $"but received {Qubits.Count}.");
+        }
+
+        if (spec.RequiresAngle && Angle is null)
+            throw new ArgumentException($"Gate {Kind} requires an angle.");
+
+        if (!spec.RequiresAngle && Angle is not null)
+            throw new ArgumentException($"Gate {Kind} does not take an angle.");
+
+        foreach (int q in Qubits)
+        {
+            if ((uint)q >= (uint)circuitQubitCount)
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(Qubits),
+                    $"Gate {Kind} uses qubit {q}, but valid qubits are 0..{circuitQubitCount - 1}.");
+            }
+        }
+
+        if (Qubits.Count != Qubits.Distinct().Count())
+            throw new ArgumentException($"Gate {Kind} contains duplicate qubits.");
+    }
+
     public void Apply()
     {
+        ValidateForCircuit(Quantum.Register.QubitCount);
+
         switch (Kind)
         {
             case GateKind.X:
@@ -75,6 +111,15 @@ public sealed record GateOperation(GateKind Kind, IReadOnlyList<int> Qubits, dou
         }
     }
 
+    private double RequireAngle()
+    {
+        if (Angle is null)
+            throw new InvalidOperationException($"Gate {Kind} requires an angle.");
+
+        return Angle.Value;
+    }
+
+    // keep your existing ToCommandString() here
     public string ToCommandString()
     {
         return Kind switch
@@ -96,13 +141,5 @@ public sealed record GateOperation(GateKind Kind, IReadOnlyList<int> Qubits, dou
 
             _ => Kind.ToString()
         };
-    }
-
-    private double RequireAngle()
-    {
-        if (Angle is null)
-            throw new InvalidOperationException($"Gate {Kind} requires an angle.");
-
-        return Angle.Value;
     }
 }
