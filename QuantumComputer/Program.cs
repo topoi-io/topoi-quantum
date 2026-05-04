@@ -346,7 +346,7 @@ void RunScript(string[] parts)
     RunScriptPath(path);
 }
 
-static string StripComment(string line)
+string StripComment(string line)
 {
     int hash = line.IndexOf('#');
 
@@ -356,7 +356,7 @@ static string StripComment(string line)
     return line[..hash];
 }
 
-static string ReconstructPath(string[] parts, int startIndex)
+string ReconstructPath(string[] parts, int startIndex)
 {
     string path = string.Join(' ', parts.Skip(startIndex)).Trim();
 
@@ -372,7 +372,7 @@ static string ReconstructPath(string[] parts, int startIndex)
     return path;
 }
 
-static int ParseQubit(string[] parts, int index)
+int ParseQubit(string[] parts, int index)
 {
     if (parts.Length <= index)
         throw new ArgumentException("Missing qubit index. Example: H 0");
@@ -383,7 +383,7 @@ static int ParseQubit(string[] parts, int index)
     return q;
 }
 
-static double ParseAngle(string[] parts, int index)
+double ParseAngle(string[] parts, int index)
 {
     if (parts.Length <= index)
         throw new ArgumentException("Missing angle. Example: RX 0 pi/2");
@@ -399,7 +399,7 @@ static double ParseAngle(string[] parts, int index)
     return theta;
 }
 
-static void RunQRand(string[] parts)
+void RunQRand(string[] parts)
 {
     int n = Quantum.Register.QubitCount;
     int k = n;
@@ -428,7 +428,7 @@ static void RunQRand(string[] parts)
     Console.WriteLine($"(int: {value})");
 }
 
-static void RunSample(string[] parts)
+void RunSample(string[] parts)
 {
     if (parts.Length < 2 || !int.TryParse(parts[1], out int trials) || trials <= 0)
         throw new ArgumentException("Usage: SAMPLE <n>   Example: SAMPLE 1000");
@@ -460,7 +460,7 @@ static void RunSample(string[] parts)
         Console.WriteLine("... (showing top 16 outcomes)");
 }
 
-static string TakeLowBits(string bitString, int k)
+string TakeLowBits(string bitString, int k)
 {
     // BitString prints MSB..LSB.
     // Qubit 0 is LSB, so the lowest k bits are the rightmost k characters.
@@ -473,7 +473,7 @@ static string TakeLowBits(string bitString, int k)
     return bitString[^k..];
 }
 
-static bool TryParsePiExpression(string s, out double value)
+bool TryParsePiExpression(string s, out double value)
 {
     value = 0.0;
 
@@ -498,7 +498,7 @@ static bool TryParsePiExpression(string s, out double value)
     }
 }
 
-static bool TryParsePiExpressionCore(string s, out double value)
+bool TryParsePiExpressionCore(string s, out double value)
 {
     value = 0.0;
 
@@ -525,7 +525,7 @@ static bool TryParsePiExpressionCore(string s, out double value)
     return true;
 }
 
-static bool TryParsePiNumerator(string s, out double value)
+bool TryParsePiNumerator(string s, out double value)
 {
     value = 0.0;
 
@@ -576,7 +576,7 @@ static bool TryParsePiNumerator(string s, out double value)
     return false;
 }
 
-static PauliTerm[] ParseObservableTerms(string[] parts, int index)
+PauliTerm[] ParseObservableTerms(string[] parts, int index)
 {
     if (parts.Length <= index)
     {
@@ -637,7 +637,7 @@ static PauliTerm[] ParseObservableTerms(string[] parts, int index)
     return terms.ToArray();
 }
 
-static bool IsPauliLetters(string token)
+bool IsPauliLetters(string token)
 {
     if (string.IsNullOrWhiteSpace(token))
         return false;
@@ -651,7 +651,7 @@ static bool IsPauliLetters(string token)
     return true;
 }
 
-static bool TryParsePauliWithIndex(string token, out char pauli, out int qubit)
+bool TryParsePauliWithIndex(string token, out char pauli, out int qubit)
 {
     pauli = '\0';
     qubit = -1;
@@ -674,7 +674,7 @@ static bool TryParsePauliWithIndex(string token, out char pauli, out int qubit)
     return true;
 }
 
-static string FormatObservable(IReadOnlyList<PauliTerm> terms)
+string FormatObservable(IReadOnlyList<PauliTerm> terms)
 {
     return string.Join(" ⊗ ", terms.Select(t => $"{t.Pauli}{t.Qubit}"));
 }
@@ -688,10 +688,7 @@ QuantumCircuit LoadCircuit(string[] parts)
     return LoadCircuitFromPath(path);
 }
 
-static bool TryParseGateOperation(
-    string[] parts,
-    out GateOperation? operation,
-    out string? error)
+bool TryParseGateOperation(string[] parts, out GateOperation? operation, out string? error)
 {
     operation = null;
     error = null;
@@ -819,7 +816,7 @@ static bool TryParseGateOperation(
     }
 }
 
-static string ResolveInputPath(string path)
+string ResolveInputPath(string path)
 {
     path = path.Trim();
 
@@ -855,7 +852,7 @@ static string ResolveInputPath(string path)
     return currentDirectoryPath;
 }
 
-static string? FindUpwardsForFile(string startDirectory, string relativePath)
+string? FindUpwardsForFile(string startDirectory, string relativePath)
 {
     DirectoryInfo? directory = new DirectoryInfo(startDirectory);
 
@@ -872,7 +869,7 @@ static string? FindUpwardsForFile(string startDirectory, string relativePath)
     return null;
 }
 
- void RunScriptPath(string path)
+void RunScriptPath(string path)
 {
     path = ResolveInputPath(path);
 
