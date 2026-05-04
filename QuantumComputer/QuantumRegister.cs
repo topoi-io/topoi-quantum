@@ -196,7 +196,7 @@ public sealed class QuantumRegister
                     case 'Y':
                         // Y|0⟩ = i|1⟩
                         // Y|1⟩ = -i|0⟩
-                        phase *= bitIs1 ? -Complex.ImaginaryOne : Complex.ImaginaryOne;
+                        phase *= bitIs1 ? Complex.ImaginaryOne : -Complex.ImaginaryOne;
                         mappedIndex ^= mask;
                         break;
 
