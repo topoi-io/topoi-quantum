@@ -243,6 +243,13 @@ bool ExecuteCommand(string line, bool echo)
                 loadedCircuit.Print();
             break;
 
+        case "DRAW":
+            if (loadedCircuit is null)
+                Console.WriteLine("No circuit loaded. Use LOAD <path> first.");
+            else
+                Console.Write(loadedCircuit.Draw());
+            break;
+
         case "RUNCIRCUIT":
             if (loadedCircuit is null)
             {
@@ -293,6 +300,9 @@ void RunCommandLine(CliOptions options)
 
         if (options.PrintCircuit)
             loadedCircuit.Print();
+
+        if (options.DrawCircuit)
+            Console.Write(loadedCircuit.Draw());
 
         loadedCircuit.Run(resetFirst: true);
 
@@ -987,6 +997,10 @@ CliOptions ParseCliArgs(string[] args)
                 options.PrintCircuit = true;
                 break;
 
+            case "--draw":
+                options.DrawCircuit = true;
+                break;
+
             case "--sample":
                 options.SampleCount = ParsePositiveIntCli(args, ref i, "--sample");
                 break;
@@ -1071,6 +1085,7 @@ void PrintHelp()
     Console.WriteLine("  RUN <path>                  Run commands from a .qc script file");
     Console.WriteLine("  LOAD <path>                 Load gate operations from a .qc file into a QuantumCircuit");
     Console.WriteLine("  CIRCUIT                     Print the currently loaded circuit");
+    Console.WriteLine("  DRAW                        Draw the currently loaded circuit");
     Console.WriteLine("  RUNCIRCUIT                  Execute the currently loaded circuit");
     Console.WriteLine("  CLEARCIRCUIT                Clear the currently loaded circuit");
     Console.WriteLine("  QUIT                        Exit");
@@ -1098,6 +1113,7 @@ void PrintCliHelp()
     Console.WriteLine("  --run <path>                 Run a full interpreter script and exit");
     Console.WriteLine("  --circuit <path>             Load and run a gate-only QuantumCircuit file and exit");
     Console.WriteLine("  --print-circuit              Print loaded circuit before execution");
+    Console.WriteLine("  --draw                       Draw loaded circuit before execution");
     Console.WriteLine("  --print                      Print final state amplitudes and probabilities");
     Console.WriteLine("  --probs                      Print final basis-state probabilities");
     Console.WriteLine("  --expect \"observable\"        Print expectation value, e.g. --expect \"ZZ 0 1\"");
@@ -1108,4 +1124,5 @@ void PrintCliHelp()
     Console.WriteLine("  dotnet run -- --qubits 2 --circuit circuits/bell.qc --print-circuit --print");
     Console.WriteLine("  dotnet run -- --qubits 2 --circuit circuits/bell.qc --expect \"ZZ 0 1\" --expect \"XX 0 1\"");
     Console.WriteLine("  dotnet run -- --qubits 3 --circuit circuits/ghz3.qc --probs --sample 1000");
+    Console.WriteLine("  dotnet run -- --qubits 2 --circuit circuits/bell.qc --draw --expect \"ZZ 0 1\"");
 }

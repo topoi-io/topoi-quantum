@@ -18,5 +18,7 @@ public sealed class CliOptions
 
     public int? SampleCount { get; set; }
 
-    public List<string> Expectations { get; } = new();
+    public bool DrawCircuit { get; set; }
+
+    public List<string> Expectations { get; } = [];
 }

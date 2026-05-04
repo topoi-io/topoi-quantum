@@ -47,6 +47,11 @@ public sealed class QuantumCircuit
             Console.WriteLine($"{i}: {_operations[i].ToCommandString()}");
     }
 
+    public string Draw()
+    {
+        return CircuitDrawer.Draw(this);
+    }
+
     private void ValidateOperation(GateOperation operation)
     {
         foreach (int q in operation.Qubits)
