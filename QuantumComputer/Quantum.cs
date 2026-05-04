@@ -15,6 +15,11 @@ public static class Quantum
         _simulator = new QuantumSimulator(n);
     }
 
+    public static void Init(int n, IRandomSource randomSource)
+    {
+        _simulator = new QuantumSimulator(n, randomSource);
+    }
+
     public static void Reset() => _simulator.Reset();
 
     public static Complex ExpectPauliString(IReadOnlyList<PauliTerm> terms)

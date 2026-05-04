@@ -398,15 +398,7 @@ double ParseAngle(string[] parts, int index)
     if (parts.Length <= index)
         throw new ArgumentException("Missing angle. Example: RX 0 pi/2");
 
-    string token = parts[index].ToLowerInvariant();
-
-    if (TryParsePiExpression(token, out double theta))
-        return theta;
-
-    if (!double.TryParse(parts[index], NumberStyles.Float, CultureInfo.InvariantCulture, out theta))
-        throw new ArgumentException("Angle must be a number or a pi expression like pi/2, -pi/8, or 3*pi/4.");
-
-    return theta;
+    return AngleParser.Parse(parts[index]);
 }
 
 void RunQRand(string[] parts)

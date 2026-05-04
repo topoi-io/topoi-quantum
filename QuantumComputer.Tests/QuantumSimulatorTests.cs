@@ -23,4 +23,19 @@ public sealed class QuantumSimulatorTests
 
         TestHelpers.AssertProbability(0, 1.0); // static Quantum still has its own 1-qubit zero state
     }
+
+    [Test]
+    public void SeededSimulator_ProducesRepeatableMeasurements()
+    {
+        var sim1 = new QuantumSimulator(1, new SeededRandomSource(123));
+        var sim2 = new QuantumSimulator(1, new SeededRandomSource(123));
+
+        sim1.H(0);
+        sim2.H(0);
+
+        int m1 = sim1.MeasureAll();
+        int m2 = sim2.MeasureAll();
+
+        Assert.That(m1, Is.EqualTo(m2));
+    }
 }

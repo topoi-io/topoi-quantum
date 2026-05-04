@@ -10,9 +10,9 @@ public sealed class QuantumSimulator
 
     public QuantumRegister Register { get; }
 
-    public QuantumSimulator(int qubitCount)
+    public QuantumSimulator(int qubitCount, IRandomSource? randomSource = null)
     {
-        Register = new QuantumRegister(qubitCount);
+        Register = new QuantumRegister(qubitCount, randomSource);
     }
 
     public void Reset()

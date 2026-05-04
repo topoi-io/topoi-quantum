@@ -15,7 +15,9 @@ public sealed class QuantumRegister
 
     internal Complex[] MutableState => _state;
 
-    public QuantumRegister(int qubitCount)
+    private readonly IRandomSource _randomSource;
+
+    public QuantumRegister(int qubitCount, IRandomSource? randomSource = null)
     {
         if (qubitCount <= 0)
             throw new ArgumentOutOfRangeException(nameof(qubitCount));
@@ -23,6 +25,7 @@ public sealed class QuantumRegister
         ValidateDenseStateVectorSize(qubitCount);
 
         QubitCount = qubitCount;
+        _randomSource = randomSource ?? CryptoRandomSource.Shared;
         _state = new Complex[1 << qubitCount];
 
         Reset();
@@ -338,10 +341,9 @@ public sealed class QuantumRegister
         return z.Real * z.Real + z.Imaginary * z.Imaginary;
     }
 
-    private static double NextUnitDouble()
+    private double NextUnitDouble()
     {
-        int x = RandomNumberGenerator.GetInt32(int.MaxValue);
-        return x / (double)int.MaxValue;
+        return _randomSource.NextDouble();
     }
 
     private static void ValidateDenseStateVectorSize(int qubitCount)
