@@ -338,12 +338,7 @@ void RunPostExecutionOptions(CliOptions options)
 
 void PrintExpectation(PauliTerm[] terms)
 {
-    Complex value = Quantum.ExpectPauliString(terms);
-
-    Console.WriteLine($"⟨{ObservableParser.Format(terms)}⟩ = {value.Real:+0.############;-0.############;0}");
-
-    if (Math.Abs(value.Imaginary) > 1e-10)
-        Console.WriteLine($"  note: small imaginary residue = {value.Imaginary:+0.###e+0;-0.###e+0;0}");
+    QuantumConsolePrinter.PrintExpectation(Quantum.DefaultSimulator, terms);
 }
 
 void RunScript(string[] parts)
