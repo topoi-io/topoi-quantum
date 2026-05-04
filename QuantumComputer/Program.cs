@@ -9,13 +9,14 @@ Console.WriteLine("N-Qubit Gate Interpreter (state-vector)");
 Console.Write("Number of qubits n (e.g. 1,2,3): ");
 
 int n = 1;
-
 {
     string? s = Console.ReadLine();
 
     if (!string.IsNullOrWhiteSpace(s) && int.TryParse(s, out int parsed) && parsed > 0)
         n = parsed;
 }
+
+QuantumCircuit? loadedCircuit = null;
 
 Quantum.Init(n);
 Quantum.Reset();
@@ -46,7 +47,7 @@ while (true)
     }
 }
 
-static bool ExecuteCommand(string line, bool echo)
+bool ExecuteCommand(string line, bool echo)
 {
     line = StripComment(line).Trim();
 
@@ -219,6 +220,35 @@ static bool ExecuteCommand(string line, bool echo)
             RunScript(parts);
             break;
 
+        case "LOAD":
+            loadedCircuit = LoadCircuit(parts);
+            Console.WriteLine($"Loaded circuit with {loadedCircuit.QubitCount} qubits and {loadedCircuit.Operations.Count} operations.");
+            break;
+
+        case "CIRCUIT":
+            if (loadedCircuit is null)
+                Console.WriteLine("No circuit loaded. Use LOAD <path> first.");
+            else
+                loadedCircuit.Print();
+            break;
+
+        case "RUNCIRCUIT":
+            if (loadedCircuit is null)
+            {
+                Console.WriteLine("No circuit loaded. Use LOAD <path> first.");
+            }
+            else
+            {
+                loadedCircuit.Run(resetFirst: true);
+                Console.WriteLine("Circuit executed.");
+            }
+            break;
+
+        case "CLEARCIRCUIT":
+            loadedCircuit = null;
+            Console.WriteLine("Loaded circuit cleared.");
+            break;
+
         case "QUIT":
         case "EXIT":
             return true;
@@ -231,12 +261,12 @@ static bool ExecuteCommand(string line, bool echo)
     return false;
 }
 
-static void RunScript(string[] parts)
+void RunScript(string[] parts)
 {
     if (parts.Length < 2)
         throw new ArgumentException("Usage: RUN <path>   Example: RUN examples/bell.qc");
 
-    string path = ReconstructPath(parts, 1);
+    string path = ResolveInputPath(ReconstructPath(parts, 1));
 
     if (!File.Exists(path))
         throw new FileNotFoundException($"Script file not found: {path}");
@@ -603,6 +633,233 @@ static string FormatObservable(IReadOnlyList<PauliTerm> terms)
     return string.Join(" ⊗ ", terms.Select(t => $"{t.Pauli}{t.Qubit}"));
 }
 
+static QuantumCircuit LoadCircuit(string[] parts)
+{
+    if (parts.Length < 2)
+        throw new ArgumentException("Usage: LOAD <path>   Example: LOAD examples/bell.qc");
+
+    string path = ResolveInputPath(ReconstructPath(parts, 1));
+
+    if (!File.Exists(path))
+        throw new FileNotFoundException($"Circuit file not found: {path}");
+
+    int qubitCount = Quantum.Register.QubitCount;
+    var circuit = new QuantumCircuit(qubitCount);
+
+    string[] lines = File.ReadAllLines(path);
+
+    for (int i = 0; i < lines.Length; i++)
+    {
+        string line = StripComment(lines[i]).Trim();
+
+        if (line.Length == 0)
+            continue;
+
+        string[] lineParts = line.Split(
+            ' ',
+            StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+        string cmd = lineParts[0].ToUpperInvariant();
+
+        // Allow RESET in circuit files but do not store it as an operation.
+        // QuantumCircuit.Run(resetFirst: true) already resets.
+        if (cmd == "RESET")
+            continue;
+
+        if (!TryParseGateOperation(lineParts, out GateOperation? operation, out string? error))
+            throw new InvalidOperationException(
+                $"Line {i + 1}: cannot load '{line}' as a circuit operation. {error}");
+
+        circuit.Add(operation);
+    }
+
+    return circuit;
+}
+
+static bool TryParseGateOperation(
+    string[] parts,
+    out GateOperation? operation,
+    out string? error)
+{
+    operation = null;
+    error = null;
+
+    if (parts.Length == 0)
+    {
+        error = "Empty command.";
+        return false;
+    }
+
+    string cmd = parts[0].ToUpperInvariant();
+
+    try
+    {
+        switch (cmd)
+        {
+            case "X":
+                operation = new GateOperation(GateKind.X, new[] { ParseQubit(parts, 1) });
+                return true;
+
+            case "Y":
+                operation = new GateOperation(GateKind.Y, new[] { ParseQubit(parts, 1) });
+                return true;
+
+            case "Z":
+                operation = new GateOperation(GateKind.Z, new[] { ParseQubit(parts, 1) });
+                return true;
+
+            case "H":
+                operation = new GateOperation(GateKind.H, new[] { ParseQubit(parts, 1) });
+                return true;
+
+            case "S":
+                operation = new GateOperation(GateKind.S, new[] { ParseQubit(parts, 1) });
+                return true;
+
+            case "T":
+                operation = new GateOperation(GateKind.T, new[] { ParseQubit(parts, 1) });
+                return true;
+
+            case "RX":
+                operation = new GateOperation(
+                    GateKind.RX,
+                    new[] { ParseQubit(parts, 1) },
+                    ParseAngle(parts, 2));
+                return true;
+
+            case "RY":
+                operation = new GateOperation(
+                    GateKind.RY,
+                    new[] { ParseQubit(parts, 1) },
+                    ParseAngle(parts, 2));
+                return true;
+
+            case "RZ":
+                operation = new GateOperation(
+                    GateKind.RZ,
+                    new[] { ParseQubit(parts, 1) },
+                    ParseAngle(parts, 2));
+                return true;
+
+            case "CX":
+            case "CNOT":
+                operation = new GateOperation(
+                    GateKind.CX,
+                    new[] { ParseQubit(parts, 1), ParseQubit(parts, 2) });
+                return true;
+
+            case "CZ":
+                operation = new GateOperation(
+                    GateKind.CZ,
+                    new[] { ParseQubit(parts, 1), ParseQubit(parts, 2) });
+                return true;
+
+            case "SWAP":
+                operation = new GateOperation(
+                    GateKind.SWAP,
+                    new[] { ParseQubit(parts, 1), ParseQubit(parts, 2) });
+                return true;
+
+            case "CCX":
+            case "TOFFOLI":
+                operation = new GateOperation(
+                    GateKind.CCX,
+                    new[]
+                    {
+                        ParseQubit(parts, 1),
+                        ParseQubit(parts, 2),
+                        ParseQubit(parts, 3)
+                    });
+                return true;
+
+            case "CRX":
+                operation = new GateOperation(
+                    GateKind.CRX,
+                    new[] { ParseQubit(parts, 1), ParseQubit(parts, 2) },
+                    ParseAngle(parts, 3));
+                return true;
+
+            case "CRY":
+                operation = new GateOperation(
+                    GateKind.CRY,
+                    new[] { ParseQubit(parts, 1), ParseQubit(parts, 2) },
+                    ParseAngle(parts, 3));
+                return true;
+
+            case "CRZ":
+                operation = new GateOperation(
+                    GateKind.CRZ,
+                    new[] { ParseQubit(parts, 1), ParseQubit(parts, 2) },
+                    ParseAngle(parts, 3));
+                return true;
+
+            default:
+                error =
+                    $"Only unitary gate commands can be loaded into a QuantumCircuit. " +
+                    $"'{cmd}' is an interpreter command, not a circuit gate.";
+                return false;
+        }
+    }
+    catch (Exception ex)
+    {
+        error = ex.Message;
+        return false;
+    }
+}
+
+static string ResolveInputPath(string path)
+{
+    path = path.Trim();
+
+    if ((path.StartsWith('"') && path.EndsWith('"')) ||
+        (path.StartsWith('\'') && path.EndsWith('\'')))
+    {
+        path = path[1..^1];
+    }
+
+    if (Path.IsPathRooted(path))
+        return path;
+
+    string currentDirectoryPath = Path.GetFullPath(path);
+
+    if (File.Exists(currentDirectoryPath))
+        return currentDirectoryPath;
+
+    string appBasePath = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, path));
+
+    if (File.Exists(appBasePath))
+        return appBasePath;
+
+    string projectPath = FindUpwardsForFile(Directory.GetCurrentDirectory(), path);
+
+    if (projectPath is not null)
+        return projectPath;
+
+    projectPath = FindUpwardsForFile(AppContext.BaseDirectory, path);
+
+    if (projectPath is not null)
+        return projectPath;
+
+    return currentDirectoryPath;
+}
+
+static string? FindUpwardsForFile(string startDirectory, string relativePath)
+{
+    DirectoryInfo? directory = new DirectoryInfo(startDirectory);
+
+    while (directory is not null)
+    {
+        string candidate = Path.GetFullPath(Path.Combine(directory.FullName, relativePath));
+
+        if (File.Exists(candidate))
+            return candidate;
+
+        directory = directory.Parent;
+    }
+
+    return null;
+}
+
 static void PrintHelp()
 {
     Console.WriteLine("Commands:");
@@ -650,6 +907,10 @@ static void PrintHelp()
     Console.WriteLine("  RESET                       Reset to |00..0>");
     Console.WriteLine("  QRAND [k]                   Generate k random bits, default k = number of qubits");
     Console.WriteLine("  RUN <path>                  Run commands from a .qc script file");
+    Console.WriteLine("  LOAD <path>                 Load gate operations from a .qc file into a QuantumCircuit");
+    Console.WriteLine("  CIRCUIT                     Print the currently loaded circuit");
+    Console.WriteLine("  RUNCIRCUIT                  Execute the currently loaded circuit");
+    Console.WriteLine("  CLEARCIRCUIT                Clear the currently loaded circuit");
     Console.WriteLine("  QUIT                        Exit");
 
     Console.WriteLine();
