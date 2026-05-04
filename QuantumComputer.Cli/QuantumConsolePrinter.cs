@@ -1,6 +1,8 @@
-﻿using System.Numerics;
+﻿using QuantumComputer.Core;
+using QuantumComputer.Parsing;
+using System.Numerics;
 
-namespace QuantumComputer;
+namespace QuantumComputer.Cli;
 
 public static class QuantumConsolePrinter
 {

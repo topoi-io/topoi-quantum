@@ -1,4 +1,5 @@
 ﻿using NUnit.Framework;
+using QuantumComputer.Core;
 
 namespace QuantumComputer.Tests;
 

@@ -17,7 +17,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\QuantumComputer\QuantumComputer.csproj" />
+    <ProjectReference Include="..\QuantumComputer.Cli\QuantumComputer.Cli.csproj" />
+    <ProjectReference Include="..\QuantumComputer.Core\QuantumComputer.Core.csproj" />
+    <ProjectReference Include="..\QuantumComputer.Drawing\QuantumComputer.Drawing.csproj" />
+    <ProjectReference Include="..\QuantumComputer.Parsing\QuantumComputer.Parsing.csproj" />
   </ItemGroup>
 
 </Project>

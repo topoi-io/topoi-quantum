@@ -1,4 +1,6 @@
-﻿namespace QuantumComputer;
+﻿using QuantumComputer.Core;
+
+namespace QuantumComputer.Parsing;
 
 public static class ObservableParser
 {

@@ -1,6 +1,6 @@
 ﻿using System.Numerics;
 
-namespace QuantumComputer;
+namespace QuantumComputer.Core;
 
 public sealed class QuantumSimulator
 {

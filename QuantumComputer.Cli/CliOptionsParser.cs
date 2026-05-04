@@ -1,6 +1,6 @@
 ﻿using System.Globalization;
 
-namespace QuantumComputer;
+namespace QuantumComputer.Cli;
 
 public static class CliOptionsParser
 {

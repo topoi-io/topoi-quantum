@@ -1,4 +1,4 @@
-﻿namespace QuantumComputer;
+﻿namespace QuantumComputer.Core;
 
 public enum GateKind
 {

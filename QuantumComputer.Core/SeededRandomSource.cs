@@ -1,4 +1,4 @@
-﻿namespace QuantumComputer;
+﻿namespace QuantumComputer.Core;
 
 public sealed class SeededRandomSource : IRandomSource
 {

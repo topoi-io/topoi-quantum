@@ -1,6 +1,7 @@
-﻿using System.Text;
+﻿using QuantumComputer.Core;
+using System.Text;
 
-namespace QuantumComputer;
+namespace QuantumComputer.Drawing;
 
 public static class CircuitDrawer
 {

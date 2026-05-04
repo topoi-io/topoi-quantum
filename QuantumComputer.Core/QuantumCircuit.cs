@@ -1,4 +1,4 @@
-﻿namespace QuantumComputer;
+﻿namespace QuantumComputer.Core;
 
 public sealed class QuantumCircuit
 {
@@ -69,11 +69,6 @@ public sealed class QuantumCircuit
 
         for (int i = 0; i < _operations.Count; i++)
             Console.WriteLine($"{i}: {_operations[i].ToCommandString()}");
-    }
-
-    public string Draw()
-    {
-        return CircuitDrawer.Draw(this);
     }
 
     private void ValidateOperation(GateOperation operation)

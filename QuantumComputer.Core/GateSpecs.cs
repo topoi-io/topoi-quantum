@@ -1,4 +1,4 @@
-﻿namespace QuantumComputer;
+﻿namespace QuantumComputer.Core;
 
 internal readonly record struct GateSpec(int QubitCount, bool RequiresAngle);
 

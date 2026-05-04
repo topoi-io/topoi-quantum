@@ -1,7 +1,7 @@
 ﻿using System.Numerics;
 using System.Security.Cryptography;
 
-namespace QuantumComputer;
+namespace QuantumComputer.Core;
 
 public sealed class QuantumRegister
 {

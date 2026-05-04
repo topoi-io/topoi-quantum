@@ -1,5 +1,7 @@
 ﻿using NUnit.Framework;
 using QuantumComputer;
+using QuantumComputer.Core;
+using QuantumComputer.Drawing;
 
 namespace QuantumComputer.Tests;
 
@@ -14,7 +16,7 @@ public sealed class CircuitDrawerTests
         circuit.Add(new GateOperation(GateKind.H, new[] { 0 }));
         circuit.Add(new GateOperation(GateKind.CX, new[] { 0, 1 }));
 
-        string drawing = circuit.Draw();
+        string drawing = CircuitDrawer.Draw(circuit);
 
         Assert.That(drawing, Does.Contain("q0:"));
         Assert.That(drawing, Does.Contain("q1:"));
@@ -32,7 +34,7 @@ public sealed class CircuitDrawerTests
         circuit.Add(new GateOperation(GateKind.H, new[] { 0 }));
         circuit.Add(new GateOperation(GateKind.CX, new[] { 0, 1 }));
 
-        string[] lines = circuit.Draw()
+        string[] lines = CircuitDrawer.Draw(circuit)
             .Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
 
         int controlColumn = lines[0].IndexOf('●');
@@ -52,7 +54,7 @@ public sealed class CircuitDrawerTests
         circuit.Add(new GateOperation(GateKind.CX, new[] { 0, 1 }));
         circuit.Add(new GateOperation(GateKind.CX, new[] { 1, 2 }));
 
-        string drawing = circuit.Draw();
+        string drawing = CircuitDrawer.Draw(circuit);
 
         Assert.That(drawing, Does.Contain("q0:"));
         Assert.That(drawing, Does.Contain("q1:"));
@@ -66,7 +68,7 @@ public sealed class CircuitDrawerTests
 
         circuit.Add(new GateOperation(GateKind.CCX, new[] { 0, 1, 2 }));
 
-        string drawing = circuit.Draw();
+        string drawing = CircuitDrawer.Draw(circuit);
 
         int controls = drawing.Count(c => c == '●');
         int targets = drawing.Count(c => c == 'X');
@@ -82,7 +84,7 @@ public sealed class CircuitDrawerTests
 
         circuit.Add(new GateOperation(GateKind.SWAP, new[] { 0, 1 }));
 
-        string drawing = circuit.Draw();
+        string drawing = CircuitDrawer.Draw(circuit);
 
         int swaps = drawing.Count(c => c == '×');
 

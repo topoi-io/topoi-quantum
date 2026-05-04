@@ -1,6 +1,6 @@
 ﻿using System.Security.Cryptography;
 
-namespace QuantumComputer;
+namespace QuantumComputer.Core;
 
 public sealed class CryptoRandomSource : IRandomSource
 {

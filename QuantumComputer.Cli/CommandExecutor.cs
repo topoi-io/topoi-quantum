@@ -1,7 +1,9 @@
-﻿using System.Globalization;
+﻿using QuantumComputer.Core;
+using QuantumComputer.Drawing;
+using QuantumComputer.Parsing;
 using System.Numerics;
 
-namespace QuantumComputer;
+namespace QuantumComputer.Cli;
 
 public sealed class CommandExecutor
 {
@@ -32,12 +34,12 @@ public sealed class CommandExecutor
                 break;
 
             case "PRINT":
-                Quantum.PrintStateTop();
+                QuantumConsolePrinter.PrintStateTop(Quantum.Register);
                 break;
 
             case "PROBS":
             case "PROBABILITIES":
-                Quantum.PrintProbabilitiesTop();
+                QuantumConsolePrinter.PrintProbabilitiesTop(Quantum.Register);
                 break;
 
             case "EXPECT":
@@ -69,11 +71,11 @@ public sealed class CommandExecutor
                 }
 
             case "MEM":
-                Quantum.PrintMemoryEstimate();
+                QuantumConsolePrinter.PrintMemoryEstimate(Quantum.Register);
                 break;
 
             case "NORM":
-                Quantum.PrintNorm();
+                QuantumConsolePrinter.PrintNorm(Quantum.Register);
                 break;
 
             case "NORMALIZE":
@@ -187,7 +189,7 @@ public sealed class CommandExecutor
                 if (_loadedCircuit is null)
                     Console.WriteLine("No circuit loaded. Use LOAD <path> first.");
                 else
-                    Console.Write(_loadedCircuit.Draw());
+                    Console.Write(CircuitDrawer.Draw(_loadedCircuit));
                 break;
 
             case "RUNCIRCUIT":

@@ -1,4 +1,7 @@
-﻿using QuantumComputer;
+﻿using QuantumComputer.Cli;
+using QuantumComputer.Core;
+using QuantumComputer.Drawing;
+using QuantumComputer.Parsing;
 using System.Text;
 
 Console.OutputEncoding = Encoding.UTF8;
@@ -34,7 +37,7 @@ if (!string.IsNullOrWhiteSpace(s) && int.TryParse(s, out int parsed) && parsed >
 
 Quantum.Init(n);
 Quantum.Reset();
-Quantum.PrintStateTop();
+QuantumConsolePrinter.PrintStateTop(Quantum.Register);
 
 Console.WriteLine();
 Console.WriteLine("Type HELP for commands. Angles are in radians.\n");
@@ -86,7 +89,7 @@ void RunCommandLine(CliOptions options, CommandExecutor executor)
             circuit.Print();
 
         if (options.DrawCircuit)
-            Console.Write(circuit.Draw());
+            Console.Write(CircuitDrawer.Draw(circuit));
 
         circuit.Run(resetFirst: true);
 
@@ -100,10 +103,10 @@ void RunCommandLine(CliOptions options, CommandExecutor executor)
 void RunPostExecutionOptions(CliOptions options)
 {
     if (options.PrintState)
-        Quantum.PrintStateTop();
+        QuantumConsolePrinter.PrintStateTop(Quantum.Register); ;
 
     if (options.PrintProbabilities)
-        Quantum.PrintProbabilitiesTop();
+        QuantumConsolePrinter.PrintProbabilitiesTop(Quantum.Register);
 
     foreach (string observable in options.Expectations)
     {

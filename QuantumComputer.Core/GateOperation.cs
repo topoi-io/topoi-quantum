@@ -1,4 +1,4 @@
-﻿namespace QuantumComputer;
+﻿namespace QuantumComputer.Core;
 
 public sealed record GateOperation(GateKind Kind, IReadOnlyList<int> Qubits, double? Angle = null)
 {

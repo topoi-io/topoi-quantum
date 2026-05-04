@@ -1,12 +1,12 @@
 ﻿using System.Numerics;
 
-namespace QuantumComputer;
+namespace QuantumComputer.Core;
 
 public static class Quantum
 {
     private static QuantumSimulator _simulator = new(1);
 
-    internal static QuantumSimulator DefaultSimulator => _simulator;
+    public static QuantumSimulator DefaultSimulator => _simulator;
 
     public static QuantumRegister Register => _simulator.Register;
 
@@ -54,27 +54,4 @@ public static class Quantum
     public static void RestoreState(Complex[] snapshot) => _simulator.RestoreState(snapshot);
 
     public static void Normalize() => _simulator.Normalize();
-
-    // Keep your existing PrintStateTop, PrintProbabilitiesTop, PrintMemoryEstimate,
-    // PrintNorm, FormatBytes, Fmt methods either here or move them into a separate
-    // QuantumConsolePrinter later.
-    public static void PrintProbabilitiesTop(int top = 16)
-    {
-        QuantumConsolePrinter.PrintProbabilitiesTop(Register, top);
-    }
-
-    public static void PrintStateTop(int top = 16)
-    {
-        QuantumConsolePrinter.PrintStateTop(Register, top);
-    }
-
-    public static void PrintMemoryEstimate()
-    {
-        QuantumConsolePrinter.PrintMemoryEstimate(Register);
-    }
-
-    public static void PrintNorm()
-    {
-        QuantumConsolePrinter.PrintNorm(Register);
-    }
 }

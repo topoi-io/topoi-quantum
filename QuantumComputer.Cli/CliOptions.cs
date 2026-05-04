@@ -1,4 +1,4 @@
-﻿namespace QuantumComputer;
+﻿namespace QuantumComputer.Cli;
 
 public sealed class CliOptions
 {
