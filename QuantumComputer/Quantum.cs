@@ -31,7 +31,7 @@ public static class Quantum
 
         int stride = 1 << t;
         int step = stride << 1;
-        var v = Register.State;
+        var v = Register.MutableState;
 
         for (int block = 0; block < v.Length; block += step)
         {
@@ -239,14 +239,14 @@ public static class Quantum
     }
 
     public static Complex[] SnapshotState()
-        => (Complex[])Register.State.Clone();
+    => (Complex[])Register.MutableState.Clone();
 
     public static void RestoreState(Complex[] snapshot)
     {
-        if (snapshot.Length != Register.State.Length)
+        if (snapshot.Length != Register.MutableState.Length)
             throw new ArgumentException("Snapshot size does not match register.");
 
-        Array.Copy(snapshot, Register.State, snapshot.Length);
+        Array.Copy(snapshot, Register.MutableState, snapshot.Length);
 
 #if DEBUG
         Register.AssertNormalized();

@@ -7,8 +7,13 @@ public sealed class QuantumRegister
 {
     private const int DefaultMaxQubits = 25;
 
+    private readonly Complex[] _state;
+
     public int QubitCount { get; }
-    public Complex[] State { get; } // length = 2^n
+
+    public ReadOnlySpan<Complex> State => _state;
+
+    internal Complex[] MutableState => _state;
 
     public QuantumRegister(int qubitCount)
     {
@@ -18,14 +23,15 @@ public sealed class QuantumRegister
         ValidateDenseStateVectorSize(qubitCount);
 
         QubitCount = qubitCount;
-        State = new Complex[1 << qubitCount];
+        _state = new Complex[1 << qubitCount];
+
         Reset();
     }
 
     public void Reset()
     {
-        Array.Clear(State);
-        State[0] = Complex.One; // |00..0>
+        Array.Clear(_state);
+        _state[0] = Complex.One; // |00..0>
     }
 
     public void Normalize()
@@ -33,7 +39,7 @@ public sealed class QuantumRegister
         double sum = 0.0;
 
         for (int i = 0; i < State.Length; i++)
-            sum += NormSquared(State[i]);
+            sum += NormSquared(_state[i]);
 
         if (sum <= 0.0)
             throw new InvalidOperationException("State norm is zero.");
@@ -41,17 +47,17 @@ public sealed class QuantumRegister
         double inv = 1.0 / Math.Sqrt(sum);
 
         for (int i = 0; i < State.Length; i++)
-            State[i] *= inv;
+            _state[i] *= inv;
     }
 
     public double[] Probabilities()
     {
-        var p = new double[State.Length];
+        var p = new double[_state.Length];
         double sum = 0.0;
 
-        for (int i = 0; i < State.Length; i++)
+        for (int i = 0; i < _state.Length; i++)
         {
-            double pi = NormSquared(State[i]);
+            double pi = NormSquared(_state[i]);
             p[i] = pi;
             sum += pi;
         }
@@ -71,8 +77,8 @@ public sealed class QuantumRegister
     {
         double total = 0.0;
 
-        for (int i = 0; i < State.Length; i++)
-            total += NormSquared(State[i]);
+        for (int i = 0; i < _state.Length; i++)
+            total += NormSquared(_state[i]);
 
         if (total <= 0.0)
             throw new InvalidOperationException("State has zero norm.");
@@ -81,11 +87,11 @@ public sealed class QuantumRegister
         double acc = 0.0;
 
         // Final bucket absorbs any floating-point rounding residue.
-        int picked = State.Length - 1;
+        int picked = _state.Length - 1;
 
-        for (int i = 0; i < State.Length; i++)
+        for (int i = 0; i < _state.Length; i++)
         {
-            acc += NormSquared(State[i]);
+            acc += NormSquared(_state[i]);
 
             if (r < acc)
             {
@@ -94,8 +100,8 @@ public sealed class QuantumRegister
             }
         }
 
-        Array.Clear(State);
-        State[picked] = Complex.One;
+        Array.Clear(_state);
+        _state[picked] = Complex.One;
 
         return picked;
     }
@@ -110,9 +116,9 @@ public sealed class QuantumRegister
         double p0 = 0.0;
         double p1 = 0.0;
 
-        for (int i = 0; i < State.Length; i++)
+        for (int i = 0; i < _state.Length; i++)
         {
-            double p = NormSquared(State[i]);
+            double p = NormSquared(_state[i]);
 
             if ((i & mask) == 0)
                 p0 += p;
@@ -144,14 +150,14 @@ public sealed class QuantumRegister
 
         double invNorm = 1.0 / Math.Sqrt(keepProb);
 
-        for (int i = 0; i < State.Length; i++)
+        for (int i = 0; i < _state.Length; i++)
         {
             bool bitIs1 = (i & mask) != 0;
 
             if ((outcome == 1) != bitIs1)
-                State[i] = Complex.Zero;
+                _state[i] = Complex.Zero;
             else
-                State[i] *= invNorm;
+                _state[i] *= invNorm;
         }
 
         return outcome;
@@ -170,9 +176,9 @@ public sealed class QuantumRegister
         Complex numerator = Complex.Zero;
         double denominator = 0.0;
 
-        for (int i = 0; i < State.Length; i++)
+        for (int i = 0; i < _state.Length; i++)
         {
-            Complex amplitude = State[i];
+            Complex amplitude = _state[i];
 
             denominator += NormSquared(amplitude);
 
@@ -212,7 +218,7 @@ public sealed class QuantumRegister
                 }
             }
 
-            numerator += Complex.Conjugate(amplitude) * phase * State[mappedIndex];
+            numerator += Complex.Conjugate(amplitude) * phase * _state[mappedIndex];
         }
 
         if (denominator <= 0.0)
@@ -234,7 +240,7 @@ public sealed class QuantumRegister
         int targetMask = 1 << target;
         int[] controlMasks = controls.Select(c => 1 << c).ToArray();
 
-        for (int i0 = 0; i0 < State.Length; i0++)
+        for (int i0 = 0; i0 < _state.Length; i0++)
         {
             // Only process each target pair once: target bit must be 0.
             if ((i0 & targetMask) != 0)
@@ -256,11 +262,11 @@ public sealed class QuantumRegister
 
             int i1 = i0 | targetMask;
 
-            Complex a = State[i0];
-            Complex b = State[i1];
+            Complex a = _state[i0];
+            Complex b = _state[i1];
 
-            State[i0] = m00 * a + m01 * b;
-            State[i1] = m10 * a + m11 * b;
+            _state[i0] = m00 * a + m01 * b;
+            _state[i1] = m10 * a + m11 * b;
         }
     }
 
@@ -271,13 +277,13 @@ public sealed class QuantumRegister
         int controlMask = 1 << control;
         int targetMask = 1 << target;
 
-        for (int i = 0; i < State.Length; i++)
+        for (int i = 0; i < _state.Length; i++)
         {
             bool controlIs1 = (i & controlMask) != 0;
             bool targetIs1 = (i & targetMask) != 0;
 
             if (controlIs1 && targetIs1)
-                State[i] = -State[i];
+                _state[i] = -_state[i];
         }
     }
 
@@ -288,7 +294,7 @@ public sealed class QuantumRegister
         int mask1 = 1 << q1;
         int mask2 = 1 << q2;
 
-        for (int i = 0; i < State.Length; i++)
+        for (int i = 0; i < _state.Length; i++)
         {
             bool b1 = (i & mask1) != 0;
             bool b2 = (i & mask2) != 0;
@@ -300,7 +306,7 @@ public sealed class QuantumRegister
 
             int j = i ^ mask1 ^ mask2;
 
-            (State[i], State[j]) = (State[j], State[i]);
+            (_state[i], _state[j]) = (_state[j], _state[i]);
         }
     }
 
@@ -308,8 +314,8 @@ public sealed class QuantumRegister
     {
         double sum = 0.0;
 
-        for (int i = 0; i < State.Length; i++)
-            sum += NormSquared(State[i]);
+        for (int i = 0; i < _state.Length; i++)
+            sum += NormSquared(_state[i]);
 
         return sum;
     }
