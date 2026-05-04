@@ -1,7 +1,6 @@
 ﻿using QuantumComputer;
 using System.Globalization;
 using System.Numerics;
-using System.Text.RegularExpressions;
 
 Console.OutputEncoding = System.Text.Encoding.UTF8;
 
@@ -9,7 +8,7 @@ QuantumCircuit? loadedCircuit = null;
 
 if (args.Length > 0)
 {
-    CliOptions options = ParseCliArgs(args);
+    CliOptions options = CliOptionsParser.Parse(args);
 
     if (options.ShowHelp)
     {
@@ -572,87 +571,6 @@ void RunScriptPath(string path)
     }
 
     Console.WriteLine($"Finished script: {path}");
-}
-
-CliOptions ParseCliArgs(string[] args)
-{
-    var options = new CliOptions();
-
-    for (int i = 0; i < args.Length; i++)
-    {
-        string arg = args[i];
-
-        switch (arg.ToLowerInvariant())
-        {
-            case "--help":
-            case "-h":
-            case "/?":
-                options.ShowHelp = true;
-                break;
-
-            case "--qubits":
-            case "-q":
-                options.Qubits = ParsePositiveIntCli(args, ref i, "--qubits");
-                break;
-
-            case "--run":
-                options.RunPath = RequireValue(args, ref i, "--run");
-                break;
-
-            case "--circuit":
-                options.CircuitPath = RequireValue(args, ref i, "--circuit");
-                break;
-
-            case "--print":
-                options.PrintState = true;
-                break;
-
-            case "--probs":
-            case "--probabilities":
-                options.PrintProbabilities = true;
-                break;
-
-            case "--print-circuit":
-                options.PrintCircuit = true;
-                break;
-
-            case "--draw":
-                options.DrawCircuit = true;
-                break;
-
-            case "--sample":
-                options.SampleCount = ParsePositiveIntCli(args, ref i, "--sample");
-                break;
-
-            case "--expect":
-                options.Expectations.Add(RequireValue(args, ref i, "--expect"));
-                break;
-
-            default:
-                throw new ArgumentException($"Unknown command-line argument: {arg}. Use --help.");
-        }
-    }
-
-    return options;
-}
-
-string RequireValue(string[] args, ref int index, string optionName)
-{
-    if (index + 1 >= args.Length)
-        throw new ArgumentException($"{optionName} requires a value.");
-
-    index++;
-    return args[index];
-}
-
-int ParsePositiveIntCli(string[] args, ref int index, string optionName)
-{
-    string value = RequireValue(args, ref index, optionName);
-
-    if (!int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int result) || result <= 0)
-        throw new ArgumentException($"{optionName} requires a positive integer.");
-
-    return result;
 }
 
 void PrintHelp()
