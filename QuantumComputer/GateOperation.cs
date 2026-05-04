@@ -38,72 +38,80 @@ public sealed record GateOperation(GateKind Kind, IReadOnlyList<int> Qubits, dou
 
     public void Apply()
     {
-        ValidateForCircuit(Quantum.Register.QubitCount);
+        Apply(Quantum.DefaultSimulator);
+    }
+
+    public void Apply(QuantumSimulator simulator)
+    {
+        if (simulator is null)
+            throw new ArgumentNullException(nameof(simulator));
+
+        ValidateForCircuit(simulator.Register.QubitCount);
 
         switch (Kind)
         {
             case GateKind.X:
-                Quantum.X(Qubits[0]);
+                simulator.X(Qubits[0]);
                 break;
 
             case GateKind.Y:
-                Quantum.Y(Qubits[0]);
+                simulator.Y(Qubits[0]);
                 break;
 
             case GateKind.Z:
-                Quantum.Z(Qubits[0]);
+                simulator.Z(Qubits[0]);
                 break;
 
             case GateKind.H:
-                Quantum.H(Qubits[0]);
+                simulator.H(Qubits[0]);
                 break;
 
             case GateKind.S:
-                Quantum.S(Qubits[0]);
+                simulator.S(Qubits[0]);
                 break;
 
             case GateKind.T:
-                Quantum.T(Qubits[0]);
+                simulator.T(Qubits[0]);
                 break;
 
             case GateKind.RX:
-                Quantum.RX(Qubits[0], RequireAngle());
+                simulator.RX(Qubits[0], RequireAngle());
                 break;
 
             case GateKind.RY:
-                Quantum.RY(Qubits[0], RequireAngle());
+                simulator.RY(Qubits[0], RequireAngle());
                 break;
 
             case GateKind.RZ:
-                Quantum.RZ(Qubits[0], RequireAngle());
+                simulator.RZ(Qubits[0], RequireAngle());
                 break;
 
             case GateKind.CX:
-                Quantum.CX(Qubits[0], Qubits[1]);
+                simulator.CX(Qubits[0], Qubits[1]);
                 break;
 
             case GateKind.CZ:
-                Quantum.CZ(Qubits[0], Qubits[1]);
+                simulator.CZ(Qubits[0], Qubits[1]);
                 break;
 
             case GateKind.SWAP:
-                Quantum.SWAP(Qubits[0], Qubits[1]);
+                simulator.SWAP(Qubits[0], Qubits[1]);
                 break;
 
             case GateKind.CCX:
-                Quantum.CCX(Qubits[0], Qubits[1], Qubits[2]);
+                simulator.CCX(Qubits[0], Qubits[1], Qubits[2]);
                 break;
 
             case GateKind.CRX:
-                Quantum.CRX(Qubits[0], Qubits[1], RequireAngle());
+                simulator.CRX(Qubits[0], Qubits[1], RequireAngle());
                 break;
 
             case GateKind.CRY:
-                Quantum.CRY(Qubits[0], Qubits[1], RequireAngle());
+                simulator.CRY(Qubits[0], Qubits[1], RequireAngle());
                 break;
 
             case GateKind.CRZ:
-                Quantum.CRZ(Qubits[0], Qubits[1], RequireAngle());
+                simulator.CRZ(Qubits[0], Qubits[1], RequireAngle());
                 break;
 
             default:

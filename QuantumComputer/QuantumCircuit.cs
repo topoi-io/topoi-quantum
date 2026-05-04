@@ -35,13 +35,26 @@ public sealed class QuantumCircuit
 
             Quantum.Init(QubitCount);
         }
-        else if (resetFirst)
+
+        Run(Quantum.DefaultSimulator, resetFirst);
+    }
+
+    public void Run(QuantumSimulator simulator, bool resetFirst = true)
+    {
+        if (simulator is null)
+            throw new ArgumentNullException(nameof(simulator));
+
+        if (simulator.Register.QubitCount != QubitCount)
         {
-            Quantum.Reset();
+            throw new InvalidOperationException(
+                $"Simulator has {simulator.Register.QubitCount} qubits, but circuit requires {QubitCount}.");
         }
 
+        if (resetFirst)
+            simulator.Reset();
+
         foreach (GateOperation operation in _operations)
-            operation.Apply();
+            operation.Apply(simulator);
     }
 
     public void Print()
