@@ -2,7 +2,7 @@
 
 A minimal N-qubit quantum computer simulator written in C# (.NET 10).
 
-It simulates unitary quantum gates, entanglement, probabilistic measurement, sampling, Pauli expectation values, and script execution using a dense state-vector model.
+It simulates unitary quantum gates, entanglement, probabilistic measurement, sampling, Pauli expectation values, script execution, circuit loading, circuit execution, command-line execution, and Unicode circuit drawing using a dense state-vector model.
 
 This project is intentionally small and educational, focusing on clarity and correctness rather than high-performance simulation.
 
@@ -24,7 +24,14 @@ This project is intentionally small and educational, focusing on clarity and cor
 - State norm diagnostics using NORM
 - Manual state normalization using NORMALIZE
 - Script execution using RUN <path>
-- Comment support in script files using #
+- Gate-only circuit loading using LOAD <path>
+- Circuit inspection using CIRCUIT
+- Circuit execution using RUNCIRCUIT
+- Unicode circuit drawing using DRAW
+- Command-line script and circuit execution
+- Command-line circuit drawing using --draw
+- NUnit regression tests
+- Comment support in script and circuit files using #
 
 ## Mathematical Model
 
@@ -74,6 +81,45 @@ dotnet run
 When the interpreter starts, enter the number of qubits:
 
 Number of qubits n (e.g. 1,2,3): 2
+
+## Command-Line Usage
+
+The interpreter can also run directly from the command line without entering the interactive REPL.
+
+### CLI Options
+
+- --help, -h – Show command-line help
+- --qubits n, -q n – Number of qubits to initialise
+- --run path – Run a full interpreter script and exit
+- --circuit path – Load and run a gate-only QuantumCircuit file and exit
+- --print-circuit – Print the loaded circuit operation list before execution
+- --draw – Draw the loaded circuit before execution
+- --print – Print the final state amplitudes and probabilities
+- --probs – Print the final basis-state probabilities
+- --expect "observable" – Print a Pauli expectation value
+- --sample n – Sample the final state n times
+
+### CLI Examples
+
+Run a full script:
+
+dotnet run -- --qubits 2 --run examples/bell.qc
+
+Load and run a gate-only circuit:
+
+dotnet run -- --qubits 2 --circuit circuits/bell.qc --print
+
+Draw a Bell circuit and compute expectations:
+
+dotnet run -- --qubits 2 --circuit circuits/bell.qc --draw --expect "ZZ 0 1" --expect "XX 0 1"
+
+Run and sample a GHZ circuit:
+
+dotnet run -- --qubits 3 --circuit circuits/ghz3.qc --draw --probs --sample 1000
+
+Run a Toffoli circuit:
+
+dotnet run -- --qubits 3 --circuit circuits/toffoli.qc --draw --print
 
 ## Commands
 
@@ -209,7 +255,7 @@ QRAND 4
 
 ### Script Execution
 
-- RUN path – Run commands from a script file
+- RUN path – Run commands from a script file immediately
 
 Script files support blank lines and comments using #.
 
@@ -233,6 +279,33 @@ EXPECT ZZ 0 1
 EXPECT XX 0 1
 
 SAMPLE 1000
+
+### Circuit Loading and Drawing
+
+Gate-only circuit files can be loaded into a QuantumCircuit model.
+
+- LOAD path – Load gate operations from a .qc file into a QuantumCircuit
+- CIRCUIT – Print the currently loaded circuit as an operation list
+- DRAW – Draw the currently loaded circuit as a Unicode circuit diagram
+- RUNCIRCUIT – Execute the currently loaded circuit
+- CLEARCIRCUIT – Clear the currently loaded circuit
+
+Example:
+
+LOAD circuits/bell.qc  
+CIRCUIT  
+DRAW  
+RUNCIRCUIT  
+PRINT
+
+Gate-only circuit files should contain unitary gate commands only. RESET is allowed and ignored when loading because RUNCIRCUIT resets before execution.
+
+Example gate-only circuit file:
+
+# Bell circuit only
+
+H 0  
+CX 0 1
 
 ### Utility
 
@@ -331,6 +404,10 @@ Run with:
 
 RUN examples/bell.qc
 
+Or from the command line:
+
+dotnet run -- --qubits 2 --run examples/bell.qc
+
 ### examples/ghz3.qc
 
 # GHZ state: (|000> + |111>) / sqrt(2)
@@ -358,6 +435,105 @@ Run with:
 
 RUN examples/ghz3.qc
 
+Or from the command line:
+
+dotnet run -- --qubits 3 --run examples/ghz3.qc
+
+## Circuit Examples
+
+### circuits/bell.qc
+
+# Bell circuit: (|00> + |11>) / sqrt(2)
+
+H 0  
+CX 0 1
+
+Run in the REPL:
+
+LOAD circuits/bell.qc  
+DRAW  
+RUNCIRCUIT  
+PRINT  
+EXPECT ZZ 0 1  
+EXPECT XX 0 1
+
+Run from the command line:
+
+dotnet run -- --qubits 2 --circuit circuits/bell.qc --draw --expect "ZZ 0 1" --expect "XX 0 1"
+
+Expected drawing:
+
+q0: ─H──●─  
+        │  
+q1: ────X─
+
+### circuits/ghz3.qc
+
+# GHZ3 circuit: (|000> + |111>) / sqrt(2)
+
+H 0  
+CX 0 1  
+CX 1 2
+
+Run in the REPL:
+
+LOAD circuits/ghz3.qc  
+DRAW  
+RUNCIRCUIT  
+PRINT  
+EXPECT ZZ 0 1  
+EXPECT ZZ 1 2  
+EXPECT XXX 0 1 2
+
+Run from the command line:
+
+dotnet run -- --qubits 3 --circuit circuits/ghz3.qc --draw --print
+
+Expected drawing:
+
+q0: ─H──●────  
+        │  
+q1: ────X──●─  
+           │  
+q2: ───────X─
+
+### circuits/toffoli.qc
+
+# Toffoli circuit
+
+X 0  
+X 1  
+CCX 0 1 2
+
+Run from the command line:
+
+dotnet run -- --qubits 3 --circuit circuits/toffoli.qc --draw --print
+
+Expected result:
+
+|111> : 1.0
+
+## Testing
+
+The project includes an NUnit test project.
+
+Run all tests with:
+
+dotnet test
+
+The tests cover:
+
+- Single-qubit gate behaviour
+- Bell-state preparation
+- GHZ-state preparation
+- SWAP behaviour
+- CCX / Toffoli behaviour
+- Pauli expectation values
+- Measurement collapse
+- Snapshot and restore
+- QuantumCircuit execution
+- Circuit drawing
+
 ## Design Notes
 
 - Uses System.Numerics.Complex for amplitudes
@@ -373,6 +549,10 @@ RUN examples/ghz3.qc
 - Periodic normalization is used only as a numerical safety mechanism
 - Expectation values are computed from Pauli observables, not just displayed probabilities
 - RUN reuses the same command executor as the interactive REPL
+- QuantumCircuit stores gate operations before execution
+- RUNCIRCUIT executes the loaded QuantumCircuit against the state-vector simulator
+- DRAW renders the loaded QuantumCircuit as a Unicode circuit diagram
+- CLI mode allows scripts and circuits to be executed without entering the REPL
 
 ## Memory Model
 
@@ -407,7 +587,11 @@ The project is organized around the following core files:
 Program.cs  
 Quantum.cs  
 QuantumRegister.cs  
-PauliTerm.cs
+PauliTerm.cs  
+GateKind.cs  
+GateOperation.cs  
+QuantumCircuit.cs  
+CircuitDrawer.cs
 
 ### Program.cs
 
@@ -416,6 +600,11 @@ Handles:
 - Interactive REPL
 - Command parsing
 - Script execution using RUN
+- Circuit loading using LOAD
+- Circuit execution using RUNCIRCUIT
+- Circuit drawing using DRAW
+- Command-line argument parsing
+- Command-line script and circuit execution
 - Angle parsing
 - Observable parsing
 - User help text
@@ -451,6 +640,46 @@ Represents one term in a Pauli observable:
 
 public readonly record struct PauliTerm(char Pauli, int Qubit);
 
+### GateKind.cs
+
+Defines the supported gate operation types used by QuantumCircuit.
+
+### GateOperation.cs
+
+Represents a single circuit operation, including:
+
+- Gate kind
+- Target qubits
+- Control qubits
+- Optional rotation angle
+- Application through the Quantum API
+- Command-style formatting
+
+### QuantumCircuit.cs
+
+Represents a reusable gate-only quantum circuit.
+
+It supports:
+
+- Adding gate operations
+- Validating qubit indices
+- Executing the circuit
+- Printing the operation list
+- Drawing the circuit
+
+### CircuitDrawer.cs
+
+Renders a QuantumCircuit as a Unicode circuit diagram.
+
+It supports:
+
+- Single-qubit gates
+- Controlled gates
+- SWAP
+- CCX / Toffoli
+- Controlled rotations
+- Connector rows between qubits
+
 ## Limitations
 
 - Dense state-vector simulation only
@@ -459,19 +688,18 @@ public readonly record struct PauliTerm(char Pauli, int Qubit);
 - No noise or decoherence models
 - No mixed states
 - No Bloch sphere visualization
-- No circuit object model yet
-- No formal test project yet
 - No OpenQASM import/export yet
 - No gate optimization or circuit transpilation
+- Circuit loading currently supports unitary gate operations only
+- Circuit drawing is text/Unicode based, not graphical
+- No plain ASCII fallback drawing mode yet
 
 ## Possible Extensions
 
-- Formal QuantumCircuit class
-- xUnit or NUnit test project
-- More example scripts
 - OpenQASM import
 - Circuit export
-- Circuit diagram output
+- Plain ASCII drawing fallback
+- Circuit diagram export to text or SVG
 - Bloch sphere visualization for single-qubit states
 - Density matrix simulator
 - Noise channels
@@ -481,13 +709,15 @@ public readonly record struct PauliTerm(char Pauli, int Qubit);
 - Additional gates: CY, CH, CS, CT, phase gates, arbitrary unitary gates
 - Controlled arbitrary single-qubit gates exposed at command level
 - Named state-preparation commands such as BELL and GHZ
-- Command-line script execution without entering the REPL
+- More command-line execution options
+- More formal circuit validation
+- Circuit optimization passes
 
 ## Educational Purpose
 
 This project is a learning tool for linear algebra, quantum mechanics, and quantum computing fundamentals.
 
-The emphasis is on conceptual correctness, readable implementation, and a clear path from simple single-qubit behaviour to entanglement and multi-qubit circuit simulation.
+The emphasis is on conceptual correctness, readable implementation, and a clear path from simple single-qubit behaviour to entanglement, circuit representation, command-line execution, testing, and multi-qubit circuit simulation.
 
 ## License
 
