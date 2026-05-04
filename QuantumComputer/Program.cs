@@ -5,6 +5,25 @@ using System.Text.RegularExpressions;
 
 Console.OutputEncoding = System.Text.Encoding.UTF8;
 
+QuantumCircuit? loadedCircuit = null;
+
+if (args.Length > 0)
+{
+    CliOptions options = ParseCliArgs(args);
+
+    if (options.ShowHelp)
+    {
+        PrintCliHelp();
+        return;
+    }
+
+    Quantum.Init(options.Qubits);
+    Quantum.Reset();
+
+    RunCommandLine(options);
+    return;
+}
+
 Console.WriteLine("N-Qubit Gate Interpreter (state-vector)");
 Console.Write("Number of qubits n (e.g. 1,2,3): ");
 
@@ -15,8 +34,6 @@ int n = 1;
     if (!string.IsNullOrWhiteSpace(s) && int.TryParse(s, out int parsed) && parsed > 0)
         n = parsed;
 }
-
-QuantumCircuit? loadedCircuit = null;
 
 Quantum.Init(n);
 Quantum.Reset();
@@ -81,13 +98,7 @@ bool ExecuteCommand(string line, bool echo)
         case "EXPECT":
             {
                 PauliTerm[] terms = ParseObservableTerms(parts, 1);
-                Complex value = Quantum.ExpectPauliString(terms);
-
-                Console.WriteLine($"⟨{FormatObservable(terms)}⟩ = {value.Real:+0.############;-0.############;0}");
-
-                if (Math.Abs(value.Imaginary) > 1e-10)
-                    Console.WriteLine($"  note: small imaginary residue = {value.Imaginary:+0.###e+0;-0.###e+0;0}");
-
+                PrintExpectation(terms);
                 break;
             }
 
@@ -261,43 +272,78 @@ bool ExecuteCommand(string line, bool echo)
     return false;
 }
 
+void RunCommandLine(CliOptions options)
+{
+    if (!string.IsNullOrWhiteSpace(options.RunPath) &&
+        !string.IsNullOrWhiteSpace(options.CircuitPath))
+    {
+        throw new ArgumentException("Use either --run <path> or --circuit <path>, not both.");
+    }
+
+    if (!string.IsNullOrWhiteSpace(options.RunPath))
+    {
+        RunScriptPath(options.RunPath);
+        RunPostExecutionOptions(options);
+        return;
+    }
+
+    if (!string.IsNullOrWhiteSpace(options.CircuitPath))
+    {
+        loadedCircuit = LoadCircuitFromPath(options.CircuitPath);
+
+        if (options.PrintCircuit)
+            loadedCircuit.Print();
+
+        loadedCircuit.Run(resetFirst: true);
+
+        RunPostExecutionOptions(options);
+        return;
+    }
+
+    throw new ArgumentException("No action specified. Use --run <path>, --circuit <path>, or --help.");
+}
+
+void RunPostExecutionOptions(CliOptions options)
+{
+    if (options.PrintState)
+        Quantum.PrintStateTop();
+
+    if (options.PrintProbabilities)
+        Quantum.PrintProbabilitiesTop();
+
+    foreach (string observable in options.Expectations)
+    {
+        string line = $"EXPECT {observable}";
+
+        string[] parts = line.Split(
+            ' ',
+            StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+        PauliTerm[] terms = ParseObservableTerms(parts, 1);
+        PrintExpectation(terms);
+    }
+
+    if (options.SampleCount is not null)
+        RunSample(new[] { "SAMPLE", options.SampleCount.Value.ToString(CultureInfo.InvariantCulture) });
+}
+
+void PrintExpectation(PauliTerm[] terms)
+{
+    Complex value = Quantum.ExpectPauliString(terms);
+
+    Console.WriteLine($"⟨{FormatObservable(terms)}⟩ = {value.Real:+0.############;-0.############;0}");
+
+    if (Math.Abs(value.Imaginary) > 1e-10)
+        Console.WriteLine($"  note: small imaginary residue = {value.Imaginary:+0.###e+0;-0.###e+0;0}");
+}
+
 void RunScript(string[] parts)
 {
     if (parts.Length < 2)
         throw new ArgumentException("Usage: RUN <path>   Example: RUN examples/bell.qc");
 
-    string path = ResolveInputPath(ReconstructPath(parts, 1));
-
-    if (!File.Exists(path))
-        throw new FileNotFoundException($"Script file not found: {path}");
-
-    Console.WriteLine($"Running script: {path}");
-
-    string[] lines = File.ReadAllLines(path);
-
-    for (int i = 0; i < lines.Length; i++)
-    {
-        string rawLine = lines[i];
-
-        try
-        {
-            bool shouldExit = ExecuteCommand(rawLine, echo: true);
-
-            if (shouldExit)
-            {
-                Console.WriteLine($"Script requested exit at line {i + 1}.");
-                return;
-            }
-        }
-        catch (Exception ex)
-        {
-            throw new InvalidOperationException(
-                $"Script error in '{path}' at line {i + 1}: {ex.Message}\n" +
-                $"Line: {rawLine}");
-        }
-    }
-
-    Console.WriteLine($"Finished script: {path}");
+    string path = ReconstructPath(parts, 1);
+    RunScriptPath(path);
 }
 
 static string StripComment(string line)
@@ -633,47 +679,13 @@ static string FormatObservable(IReadOnlyList<PauliTerm> terms)
     return string.Join(" ⊗ ", terms.Select(t => $"{t.Pauli}{t.Qubit}"));
 }
 
-static QuantumCircuit LoadCircuit(string[] parts)
+QuantumCircuit LoadCircuit(string[] parts)
 {
     if (parts.Length < 2)
-        throw new ArgumentException("Usage: LOAD <path>   Example: LOAD examples/bell.qc");
+        throw new ArgumentException("Usage: LOAD <path>   Example: LOAD circuits/bell.qc");
 
-    string path = ResolveInputPath(ReconstructPath(parts, 1));
-
-    if (!File.Exists(path))
-        throw new FileNotFoundException($"Circuit file not found: {path}");
-
-    int qubitCount = Quantum.Register.QubitCount;
-    var circuit = new QuantumCircuit(qubitCount);
-
-    string[] lines = File.ReadAllLines(path);
-
-    for (int i = 0; i < lines.Length; i++)
-    {
-        string line = StripComment(lines[i]).Trim();
-
-        if (line.Length == 0)
-            continue;
-
-        string[] lineParts = line.Split(
-            ' ',
-            StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-
-        string cmd = lineParts[0].ToUpperInvariant();
-
-        // Allow RESET in circuit files but do not store it as an operation.
-        // QuantumCircuit.Run(resetFirst: true) already resets.
-        if (cmd == "RESET")
-            continue;
-
-        if (!TryParseGateOperation(lineParts, out GateOperation? operation, out string? error))
-            throw new InvalidOperationException(
-                $"Line {i + 1}: cannot load '{line}' as a circuit operation. {error}");
-
-        circuit.Add(operation);
-    }
-
-    return circuit;
+    string path = ReconstructPath(parts, 1);
+    return LoadCircuitFromPath(path);
 }
 
 static bool TryParseGateOperation(
@@ -860,7 +872,160 @@ static string? FindUpwardsForFile(string startDirectory, string relativePath)
     return null;
 }
 
-static void PrintHelp()
+ void RunScriptPath(string path)
+{
+    path = ResolveInputPath(path);
+
+    if (!File.Exists(path))
+        throw new FileNotFoundException($"Script file not found: {path}");
+
+    Console.WriteLine($"Running script: {path}");
+
+    string[] lines = File.ReadAllLines(path);
+
+    for (int i = 0; i < lines.Length; i++)
+    {
+        string rawLine = lines[i];
+
+        try
+        {
+            bool shouldExit = ExecuteCommand(rawLine, echo: true);
+
+            if (shouldExit)
+            {
+                Console.WriteLine($"Script requested exit at line {i + 1}.");
+                return;
+            }
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException(
+                $"Script error in '{path}' at line {i + 1}: {ex.Message}\n" +
+                $"Line: {rawLine}");
+        }
+    }
+
+    Console.WriteLine($"Finished script: {path}");
+}
+
+QuantumCircuit LoadCircuitFromPath(string path)
+{
+    path = ResolveInputPath(path);
+
+    if (!File.Exists(path))
+        throw new FileNotFoundException($"Circuit file not found: {path}");
+
+    int qubitCount = Quantum.Register.QubitCount;
+    var circuit = new QuantumCircuit(qubitCount);
+
+    string[] lines = File.ReadAllLines(path);
+
+    for (int i = 0; i < lines.Length; i++)
+    {
+        string line = StripComment(lines[i]).Trim();
+
+        if (line.Length == 0)
+            continue;
+
+        string[] lineParts = line.Split(
+            ' ',
+            StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+        string cmd = lineParts[0].ToUpperInvariant();
+
+        if (cmd == "RESET")
+            continue;
+
+        if (!TryParseGateOperation(lineParts, out GateOperation? operation, out string? error))
+        {
+            throw new InvalidOperationException(
+                $"Line {i + 1}: cannot load '{line}' as a circuit operation. {error}");
+        }
+
+        circuit.Add(operation);
+    }
+
+    return circuit;
+}
+
+CliOptions ParseCliArgs(string[] args)
+{
+    var options = new CliOptions();
+
+    for (int i = 0; i < args.Length; i++)
+    {
+        string arg = args[i];
+
+        switch (arg.ToLowerInvariant())
+        {
+            case "--help":
+            case "-h":
+            case "/?":
+                options.ShowHelp = true;
+                break;
+
+            case "--qubits":
+            case "-q":
+                options.Qubits = ParsePositiveIntCli(args, ref i, "--qubits");
+                break;
+
+            case "--run":
+                options.RunPath = RequireValue(args, ref i, "--run");
+                break;
+
+            case "--circuit":
+                options.CircuitPath = RequireValue(args, ref i, "--circuit");
+                break;
+
+            case "--print":
+                options.PrintState = true;
+                break;
+
+            case "--probs":
+            case "--probabilities":
+                options.PrintProbabilities = true;
+                break;
+
+            case "--print-circuit":
+                options.PrintCircuit = true;
+                break;
+
+            case "--sample":
+                options.SampleCount = ParsePositiveIntCli(args, ref i, "--sample");
+                break;
+
+            case "--expect":
+                options.Expectations.Add(RequireValue(args, ref i, "--expect"));
+                break;
+
+            default:
+                throw new ArgumentException($"Unknown command-line argument: {arg}. Use --help.");
+        }
+    }
+
+    return options;
+}
+
+string RequireValue(string[] args, ref int index, string optionName)
+{
+    if (index + 1 >= args.Length)
+        throw new ArgumentException($"{optionName} requires a value.");
+
+    index++;
+    return args[index];
+}
+
+int ParsePositiveIntCli(string[] args, ref int index, string optionName)
+{
+    string value = RequireValue(args, ref index, optionName);
+
+    if (!int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int result) || result <= 0)
+        throw new ArgumentException($"{optionName} requires a positive integer.");
+
+    return result;
+}
+
+void PrintHelp()
 {
     Console.WriteLine("Commands:");
 
@@ -914,7 +1079,36 @@ static void PrintHelp()
     Console.WriteLine("  QUIT                        Exit");
 
     Console.WriteLine();
+    Console.WriteLine("CLI examples:");
+    Console.WriteLine("  dotnet run -- --qubits 2 --run examples/bell.qc");
+    Console.WriteLine("  dotnet run -- --qubits 2 --circuit circuits/bell.qc --print --expect \"ZZ 0 1\"");
 
+    Console.WriteLine();
     Console.WriteLine("Angle formats:");
     Console.WriteLine("  1.57079632679   pi   +pi/2   -pi/8   3*pi/4   -3*pi/4   0.5*pi");
+}
+
+void PrintCliHelp()
+{
+    Console.WriteLine("N-Qubit Gate Interpreter CLI");
+    Console.WriteLine();
+    Console.WriteLine("Usage:");
+    Console.WriteLine("  dotnet run -- [options]");
+    Console.WriteLine();
+    Console.WriteLine("Options:");
+    Console.WriteLine("  --help, -h                  Show command-line help");
+    Console.WriteLine("  --qubits <n>, -q <n>         Number of qubits to initialise, default 1");
+    Console.WriteLine("  --run <path>                 Run a full interpreter script and exit");
+    Console.WriteLine("  --circuit <path>             Load and run a gate-only QuantumCircuit file and exit");
+    Console.WriteLine("  --print-circuit              Print loaded circuit before execution");
+    Console.WriteLine("  --print                      Print final state amplitudes and probabilities");
+    Console.WriteLine("  --probs                      Print final basis-state probabilities");
+    Console.WriteLine("  --expect \"observable\"        Print expectation value, e.g. --expect \"ZZ 0 1\"");
+    Console.WriteLine("  --sample <n>                 Sample final state n times");
+    Console.WriteLine();
+    Console.WriteLine("Examples:");
+    Console.WriteLine("  dotnet run -- --qubits 2 --run examples/bell.qc");
+    Console.WriteLine("  dotnet run -- --qubits 2 --circuit circuits/bell.qc --print-circuit --print");
+    Console.WriteLine("  dotnet run -- --qubits 2 --circuit circuits/bell.qc --expect \"ZZ 0 1\" --expect \"XX 0 1\"");
+    Console.WriteLine("  dotnet run -- --qubits 3 --circuit circuits/ghz3.qc --probs --sample 1000");
 }
