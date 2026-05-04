@@ -296,7 +296,7 @@ void RunCommandLine(CliOptions options)
 
     if (!string.IsNullOrWhiteSpace(options.CircuitPath))
     {
-        loadedCircuit = LoadCircuitFromPath(options.CircuitPath);
+        loadedCircuit = CircuitFileLoader.Load(options.CircuitPath, Quantum.Register.QubitCount);
 
         if (options.PrintCircuit)
             loadedCircuit.Print();
@@ -475,116 +475,14 @@ string TakeLowBits(string bitString, int k)
     return bitString[^k..];
 }
 
-bool TryParsePiExpression(string s, out double value)
-{
-    value = 0.0;
-
-    if (string.IsNullOrWhiteSpace(s))
-        return false;
-
-    s = s.Trim()
-         .ToLowerInvariant()
-         .Replace(" ", "");
-
-    if (!s.Contains("pi", StringComparison.Ordinal))
-        return false;
-
-    try
-    {
-        return TryParsePiExpressionCore(s, out value);
-    }
-    catch
-    {
-        value = 0.0;
-        return false;
-    }
-}
-
-bool TryParsePiExpressionCore(string s, out double value)
-{
-    value = 0.0;
-
-    string[] frac = s.Split('/', StringSplitOptions.RemoveEmptyEntries);
-
-    if (frac.Length is < 1 or > 2)
-        return false;
-
-    if (!TryParsePiNumerator(frac[0], out double numerator))
-        return false;
-
-    double denominator = 1.0;
-
-    if (frac.Length == 2)
-    {
-        if (!double.TryParse(frac[1], NumberStyles.Float, CultureInfo.InvariantCulture, out denominator))
-            return false;
-
-        if (denominator == 0.0)
-            return false;
-    }
-
-    value = numerator / denominator;
-    return true;
-}
-
-bool TryParsePiNumerator(string s, out double value)
-{
-    value = 0.0;
-
-    if (string.IsNullOrWhiteSpace(s))
-        return false;
-
-    if (s == "pi" || s == "+pi")
-    {
-        value = Math.PI;
-        return true;
-    }
-
-    if (s == "-pi")
-    {
-        value = -Math.PI;
-        return true;
-    }
-
-    // Accept implicit multiplication: 3pi, -3pi, +3pi
-    s = Regex.Replace(
-        s,
-        @"^([+-]?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)pi$",
-        "$1*pi");
-
-    string[] mul = s.Split('*', StringSplitOptions.RemoveEmptyEntries);
-
-    if (mul.Length != 2)
-        return false;
-
-    if (mul[0] == "pi")
-    {
-        if (!double.TryParse(mul[1], NumberStyles.Float, CultureInfo.InvariantCulture, out double factor))
-            return false;
-
-        value = Math.PI * factor;
-        return true;
-    }
-
-    if (mul[1] == "pi")
-    {
-        if (!double.TryParse(mul[0], NumberStyles.Float, CultureInfo.InvariantCulture, out double factor))
-            return false;
-
-        value = factor * Math.PI;
-        return true;
-    }
-
-    return false;
-}
-
 QuantumCircuit LoadCircuit(string[] parts)
 {
     if (parts.Length < 2)
         throw new ArgumentException("Usage: LOAD <path>   Example: LOAD circuits/bell.qc");
 
     string path = ReconstructPath(parts, 1);
-    return LoadCircuitFromPath(path);
+
+    return CircuitFileLoader.Load(path, Quantum.Register.QubitCount);
 }
 
 string ResolveInputPath(string path)
@@ -674,46 +572,6 @@ void RunScriptPath(string path)
     }
 
     Console.WriteLine($"Finished script: {path}");
-}
-
-QuantumCircuit LoadCircuitFromPath(string path)
-{
-    path = ResolveInputPath(path);
-
-    if (!File.Exists(path))
-        throw new FileNotFoundException($"Circuit file not found: {path}");
-
-    int qubitCount = Quantum.Register.QubitCount;
-    var circuit = new QuantumCircuit(qubitCount);
-
-    string[] lines = File.ReadAllLines(path);
-
-    for (int i = 0; i < lines.Length; i++)
-    {
-        string line = StripComment(lines[i]).Trim();
-
-        if (line.Length == 0)
-            continue;
-
-        string[] lineParts = line.Split(
-            ' ',
-            StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-
-        string cmd = lineParts[0].ToUpperInvariant();
-
-        if (cmd == "RESET")
-            continue;
-
-        if (!GateOperationParser.TryParse(lineParts, out GateOperation? operation, out string? error))
-        {
-            throw new InvalidOperationException(
-                $"Line {i + 1}: cannot load '{line}' as a circuit operation. {error}");
-        }
-
-        circuit.Add(operation);
-    }
-
-    return circuit;
 }
 
 CliOptions ParseCliArgs(string[] args)
