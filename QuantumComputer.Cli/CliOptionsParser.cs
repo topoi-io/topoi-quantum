@@ -20,6 +20,11 @@ public static class CliOptionsParser
                     options.ShowHelp = true;
                     break;
 
+                case "--qasm":
+                case "--openqasm":
+                    options.OpenQasmPath = RequireValue(args, ref i, "--qasm");
+                    break;
+
                 case "--qubits":
                 case "-q":
                     options.Qubits = ParsePositiveIntCli(args, ref i, "--qubits");

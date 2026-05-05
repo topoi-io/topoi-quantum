@@ -2,6 +2,7 @@
   <Project Path="QuantumComputer.Cli/QuantumComputer.Cli.csproj" Id="db28ef8f-84b4-4f20-b523-09a13f717b5d" />
   <Project Path="QuantumComputer.Core/QuantumComputer.Core.csproj" Id="6e3748aa-6947-423d-8e4c-8d6efe85f32a" />
   <Project Path="QuantumComputer.Drawing/QuantumComputer.Drawing.csproj" Id="6f6a8155-f647-4bd1-96f3-4f17738c117d" />
+  <Project Path="QuantumComputer.OpenQasm/QuantumComputer.OpenQasm.csproj" Id="867564b4-02fd-4864-8b31-b021fbdf8683" />
   <Project Path="QuantumComputer.Parsing/QuantumComputer.Parsing.csproj" Id="9c5f79f1-61d5-495d-aa9c-1e5d42f84c2b" />
   <Project Path="QuantumComputer.Tests/QuantumComputer.Tests.csproj" Id="d9bbcfe2-660b-44f5-93e6-453f811e4817" />
   <Project Path="QuantumComputer/QuantumComputer.csproj" />

@@ -19,6 +19,7 @@ public sealed class CliOptions
     public int? SampleCount { get; set; }
 
     public bool DrawCircuit { get; set; }
+    public string? OpenQasmPath { get; set; }
 
     public List<string> Expectations { get; } = [];
 }

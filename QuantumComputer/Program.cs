@@ -1,6 +1,7 @@
 ﻿using QuantumComputer.Cli;
 using QuantumComputer.Core;
 using QuantumComputer.Drawing;
+using QuantumComputer.OpenQasm;
 using QuantumComputer.Parsing;
 using System.Text;
 
@@ -66,11 +67,19 @@ while (true)
 
 void RunCommandLine(CliOptions options, CommandExecutor executor)
 {
-    if (!string.IsNullOrWhiteSpace(options.RunPath) &&
-        !string.IsNullOrWhiteSpace(options.CircuitPath))
-    {
-        throw new ArgumentException("Use either --run <path> or --circuit <path>, not both.");
-    }
+    int sourceCount = 0;
+
+    if (!string.IsNullOrWhiteSpace(options.RunPath))
+        sourceCount++;
+
+    if (!string.IsNullOrWhiteSpace(options.CircuitPath))
+        sourceCount++;
+
+    if (!string.IsNullOrWhiteSpace(options.OpenQasmPath))
+        sourceCount++;
+
+    if (sourceCount > 1)
+        throw new ArgumentException("Use only one of --run, --circuit, or --qasm.");
 
     if (!string.IsNullOrWhiteSpace(options.RunPath))
     {
@@ -97,6 +106,24 @@ void RunCommandLine(CliOptions options, CommandExecutor executor)
         return;
     }
 
+    if (!string.IsNullOrWhiteSpace(options.OpenQasmPath))
+    {
+        QuantumCircuit circuit = OpenQasmCircuitLoader.LoadFromFile(options.OpenQasmPath);
+
+        Quantum.Init(circuit.QubitCount);
+
+        if (options.PrintCircuit)
+            circuit.Print();
+
+        if (options.DrawCircuit)
+            Console.Write(CircuitDrawer.Draw(circuit));
+
+        circuit.Run(resetFirst: true);
+
+        RunPostExecutionOptions(options);
+        return;
+    }
+
     throw new ArgumentException("No action specified. Use --run <path>, --circuit <path>, or --help.");
 }
 
@@ -110,8 +137,15 @@ void RunPostExecutionOptions(CliOptions options)
 
     foreach (string observable in options.Expectations)
     {
-        PauliTerm[] terms = ObservableParser.Parse(observable);
-        QuantumConsolePrinter.PrintExpectation(Quantum.DefaultSimulator, terms);
+        try
+        {
+            PauliTerm[] terms = ObservableParser.Parse(observable);
+            QuantumConsolePrinter.PrintExpectation(Quantum.DefaultSimulator, terms);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Expectation error for \"{observable}\": {ex.Message}");
+        }
     }
 
     if (options.SampleCount is not null)
