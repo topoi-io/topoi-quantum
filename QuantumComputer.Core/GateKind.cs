@@ -9,16 +9,25 @@ public enum GateKind
     S,
     T,
 
+    I,
+    SX,
+    SXDG,
+    SDG,
+    TDG,
+
     RX,
     RY,
     RZ,
 
     CX,
+    CY,
     CZ,
+    CH,
     SWAP,
     CCX,
 
     CRX,
     CRY,
-    CRZ
+    CRZ,
+    CP
 }

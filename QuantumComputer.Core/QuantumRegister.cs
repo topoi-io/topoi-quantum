@@ -1,5 +1,4 @@
 ﻿using System.Numerics;
-using System.Security.Cryptography;
 
 namespace QuantumComputer.Core;
 
@@ -344,6 +343,25 @@ public sealed class QuantumRegister
     private double NextUnitDouble()
     {
         return _randomSource.NextDouble();
+    }
+
+    public void ApplyControlledPhase(int control, int target, double theta)
+    {
+        ValidateTwoDistinctQubits(control, target);
+
+        int controlMask = 1 << control;
+        int targetMask = 1 << target;
+
+        Complex phase = Complex.Exp(Complex.ImaginaryOne * theta);
+
+        for (int i = 0; i < _state.Length; i++)
+        {
+            bool controlIs1 = (i & controlMask) != 0;
+            bool targetIs1 = (i & targetMask) != 0;
+
+            if (controlIs1 && targetIs1)
+                _state[i] *= phase;
+        }
     }
 
     private static void ValidateDenseStateVectorSize(int qubitCount)

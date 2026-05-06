@@ -228,6 +228,61 @@ public sealed class QuantumSimulator
         _unitaryGateCount = 0;
     }
 
+    public void I(int t)
+    {
+        if ((uint)t >= (uint)Register.QubitCount)
+            throw new ArgumentOutOfRangeException(nameof(t), $"Qubit index out of range. Must be 0..{Register.QubitCount - 1}");
+
+        // Identity gate intentionally changes nothing, but still counts as a unitary operation.
+        AfterUnitaryGate();
+    }
+
+    public void SDG(int t)
+    {
+        Apply1(t, 1, 0, 0, -Complex.ImaginaryOne);
+    }
+
+    public void TDG(int t)
+    {
+        Complex phase = Complex.Exp(-Complex.ImaginaryOne * (Math.PI / 4.0));
+        Apply1(t, 1, 0, 0, phase);
+    }
+
+    public void SX(int t)
+    {
+        // sqrt(X) = 1/2 [[1+i, 1-i], [1-i, 1+i]]
+        Complex a = new Complex(0.5, 0.5);
+        Complex b = new Complex(0.5, -0.5);
+
+        Apply1(t, a, b, b, a);
+    }
+
+    public void SXDG(int t)
+    {
+        // inverse sqrt(X) = 1/2 [[1-i, 1+i], [1+i, 1-i]]
+        Complex a = new Complex(0.5, -0.5);
+        Complex b = new Complex(0.5, 0.5);
+
+        Apply1(t, a, b, b, a);
+    }
+
+    public void CY(int control, int target)
+    {
+        Controlled1(control, target, 0, -Complex.ImaginaryOne, Complex.ImaginaryOne, 0);
+    }
+
+    public void CH(int control, int target)
+    {
+        double invSqrt2 = 1.0 / Math.Sqrt(2.0);
+        Controlled1(control, target, invSqrt2, invSqrt2, invSqrt2, -invSqrt2);
+    }
+
+    public void CP(int control, int target, double theta)
+    {
+        Register.ApplyControlledPhase(control, target, theta);
+        AfterUnitaryGate();
+    }
+
     private void AfterUnitaryGate()
     {
         _unitaryGateCount++;

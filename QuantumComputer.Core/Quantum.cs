@@ -47,6 +47,16 @@ public static class Quantum
     public static void CRY(int control, int target, double theta) => _simulator.CRY(control, target, theta);
     public static void CRZ(int control, int target, double theta) => _simulator.CRZ(control, target, theta);
 
+    public static void I(int t) => _simulator.I(t);
+    public static void SDG(int t) => _simulator.SDG(t);
+    public static void TDG(int t) => _simulator.TDG(t);
+    public static void SX(int t) => _simulator.SX(t);
+    public static void SXDG(int t) => _simulator.SXDG(t);
+
+    public static void CY(int control, int target) => _simulator.CY(control, target);
+    public static void CH(int control, int target) => _simulator.CH(control, target);
+    public static void CP(int control, int target, double theta) => _simulator.CP(control, target, theta);
+
     public static int MeasureAll() => _simulator.MeasureAll();
     public static int Measure(int q) => _simulator.Measure(q);
 

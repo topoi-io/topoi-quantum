@@ -101,7 +101,7 @@ public sealed class OpenQasmParserTests
     }
 
     [Test]
-    public void LoadFromString_UnsupportedGate_Throws()
+    public void LoadFromString_SXGate_IsSupported()
     {
         const string source = """
         OPENQASM 3.1;
@@ -110,6 +110,26 @@ public sealed class OpenQasmParserTests
         qubit[1] q;
 
         sx q[0];
+        """;
+
+        QuantumCircuit circuit = OpenQasmCircuitLoader.LoadFromString(source);
+
+        Assert.That(circuit.QubitCount, Is.EqualTo(1));
+        Assert.That(circuit.Operations.Count, Is.EqualTo(1));
+        Assert.That(circuit.Operations[0].Kind, Is.EqualTo(GateKind.SX));
+        Assert.That(circuit.Operations[0].Qubits, Is.EqualTo(new[] { 0 }));
+    }
+
+    [Test]
+    public void LoadFromString_UnsupportedGate_Throws()
+    {
+        const string source = """
+        OPENQASM 3.1;
+        include "stdgates.inc";
+
+        qubit[1] q;
+
+        u3(pi / 2, 0, pi) q[0];
         """;
 
         Assert.Throws<OpenQasmParseException>(() =>

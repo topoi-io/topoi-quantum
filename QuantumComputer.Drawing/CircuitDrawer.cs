@@ -73,6 +73,11 @@ public static class CircuitDrawer
             case GateKind.H:
             case GateKind.S:
             case GateKind.T:
+            case GateKind.I:
+            case GateKind.SX:
+            case GateKind.SXDG:
+            case GateKind.SDG:
+            case GateKind.TDG:
                 DrawSingleQubitGate(column, operation.Qubits[0], operation.Kind.ToString());
                 break;
 
@@ -108,6 +113,18 @@ public static class CircuitDrawer
 
             case GateKind.CRZ:
                 DrawConnectedGate(column, operation.Qubits[0], operation.Qubits[1], Control, "RZ ");
+                break;
+
+            case GateKind.CY:
+                DrawConnectedGate(column, operation.Qubits[0], operation.Qubits[1], Control, "─Y─");
+                break;
+
+            case GateKind.CH:
+                DrawConnectedGate(column, operation.Qubits[0], operation.Qubits[1], Control, "─H─");
+                break;
+
+            case GateKind.CP:
+                DrawConnectedGate(column, operation.Qubits[0], operation.Qubits[1], Control, "─P─");
                 break;
 
             default:

@@ -114,6 +114,38 @@ public sealed record GateOperation(GateKind Kind, IReadOnlyList<int> Qubits, dou
                 simulator.CRZ(Qubits[0], Qubits[1], RequireAngle());
                 break;
 
+            case GateKind.I:
+                simulator.I(Qubits[0]);
+                break;
+
+            case GateKind.SDG:
+                simulator.SDG(Qubits[0]);
+                break;
+
+            case GateKind.TDG:
+                simulator.TDG(Qubits[0]);
+                break;
+
+            case GateKind.SX:
+                simulator.SX(Qubits[0]);
+                break;
+
+            case GateKind.SXDG:
+                simulator.SXDG(Qubits[0]);
+                break;
+
+            case GateKind.CY:
+                simulator.CY(Qubits[0], Qubits[1]);
+                break;
+
+            case GateKind.CH:
+                simulator.CH(Qubits[0], Qubits[1]);
+                break;
+
+            case GateKind.CP:
+                simulator.CP(Qubits[0], Qubits[1], RequireAngle());
+                break;
+
             default:
                 throw new NotSupportedException($"Unsupported gate kind: {Kind}");
         }
@@ -132,19 +164,20 @@ public sealed record GateOperation(GateKind Kind, IReadOnlyList<int> Qubits, dou
     {
         return Kind switch
         {
-            GateKind.X or GateKind.Y or GateKind.Z or GateKind.H or GateKind.S or GateKind.T
+            GateKind.X or GateKind.Y or GateKind.Z or GateKind.H or GateKind.S or GateKind.T or GateKind.I or GateKind.SX or GateKind.SXDG 
+                or GateKind.SDG or GateKind.TDG
                 => $"{Kind} {Qubits[0]}",
 
             GateKind.RX or GateKind.RY or GateKind.RZ
                 => $"{Kind} {Qubits[0]} {RequireAngle():R}",
 
-            GateKind.CX or GateKind.CZ or GateKind.SWAP
+            GateKind.CX or GateKind.CZ or GateKind.SWAP or GateKind.CY or GateKind.CH
                 => $"{Kind} {Qubits[0]} {Qubits[1]}",
 
             GateKind.CCX
                 => $"{Kind} {Qubits[0]} {Qubits[1]} {Qubits[2]}",
 
-            GateKind.CRX or GateKind.CRY or GateKind.CRZ
+            GateKind.CRX or GateKind.CRY or GateKind.CRZ or GateKind.CP
                 => $"{Kind} {Qubits[0]} {Qubits[1]} {RequireAngle():R}",
 
             _ => Kind.ToString()
