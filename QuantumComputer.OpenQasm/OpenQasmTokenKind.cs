@@ -24,5 +24,14 @@ public enum OpenQasmTokenKind
     OpenQasm,
     Include,
     Qubit,
-    Pi
+    Pi,
+    Bit,
+    Measure,
+    Reset,
+    Barrier,
+    Arrow,
+    Equals,
+    OpenBrace,
+    CloseBrace,
+    Gate
 }

@@ -135,4 +135,21 @@ public sealed class OpenQasmParserTests
         Assert.Throws<OpenQasmParseException>(() =>
             OpenQasmCircuitLoader.LoadFromString(source));
     }
+
+    [Test]
+    public void Export_ThenImport_BellCircuit_PreservesOperations()
+    {
+        var circuit = new QuantumCircuit(2);
+        circuit.Add(new GateOperation(GateKind.H, new[] { 0 }));
+        circuit.Add(new GateOperation(GateKind.CX, new[] { 0, 1 }));
+
+        string qasm = OpenQasmExporter.Export(circuit);
+
+        QuantumCircuit imported = OpenQasmCircuitLoader.LoadFromString(qasm);
+
+        Assert.That(imported.QubitCount, Is.EqualTo(2));
+        Assert.That(imported.Operations.Count, Is.EqualTo(2));
+        Assert.That(imported.Operations[0].Kind, Is.EqualTo(GateKind.H));
+        Assert.That(imported.Operations[1].Kind, Is.EqualTo(GateKind.CX));
+    }
 }

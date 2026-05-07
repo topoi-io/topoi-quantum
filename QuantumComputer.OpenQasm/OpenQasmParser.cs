@@ -60,6 +60,25 @@ public sealed class OpenQasmParser
         if (Check(OpenQasmTokenKind.Identifier))
             return ParseGateCall();
 
+        if (Match(OpenQasmTokenKind.Bit))
+            return ParseBitDeclaration();
+
+        if (Check(OpenQasmTokenKind.Identifier) && PeekKind(1) == OpenQasmTokenKind.OpenBracket)
+        {
+            // Could be c[0] = measure q[0];
+            if (LooksLikeMeasurementAssignment())
+                return ParseMeasurementAssignment();
+        }
+
+        if (Match(OpenQasmTokenKind.Measure))
+            return ParseLegacyMeasurement();
+
+        if (Match(OpenQasmTokenKind.Reset))
+            return ParseResetStatement();
+
+        if (Match(OpenQasmTokenKind.Barrier))
+            return ParseBarrierStatement();
+
         throw Error(Current, $"Unsupported OpenQASM statement starting with '{Current.Text}'.");
     }
 
@@ -261,5 +280,102 @@ public sealed class OpenQasmParser
     private static OpenQasmParseException Error(OpenQasmToken token, string message)
     {
         return new OpenQasmParseException(message, token.Line, token.Column);
+    }
+
+    private OpenQasmTokenKind PeekKind(int offset)
+    {
+        int index = _position + offset;
+        return index >= _tokens.Count
+            ? OpenQasmTokenKind.EndOfFile
+            : _tokens[index].Kind;
+    }
+
+    private OpenQasmBitDeclaration ParseBitDeclaration()
+    {
+        Consume(OpenQasmTokenKind.OpenBracket, "Expected '[' after bit.");
+        int size = ParseIntegerLiteral();
+        Consume(OpenQasmTokenKind.CloseBracket, "Expected ']' after bit size.");
+
+        OpenQasmToken name = Consume(OpenQasmTokenKind.Identifier, "Expected bit register name.");
+        Consume(OpenQasmTokenKind.Semicolon, "Expected ';' after bit declaration.");
+
+        if (size <= 0)
+            throw Error(name, "Bit register size must be positive.");
+
+        return new OpenQasmBitDeclaration(name.Text, size);
+    }
+
+    private bool LooksLikeMeasurementAssignment()
+    {
+        int p = _position;
+
+        return p + 6 < _tokens.Count
+               && _tokens[p].Kind == OpenQasmTokenKind.Identifier
+               && _tokens[p + 1].Kind == OpenQasmTokenKind.OpenBracket
+               && _tokens[p + 2].Kind == OpenQasmTokenKind.Integer
+               && _tokens[p + 3].Kind == OpenQasmTokenKind.CloseBracket
+               && _tokens[p + 4].Kind == OpenQasmTokenKind.Equals
+               && _tokens[p + 5].Kind == OpenQasmTokenKind.Measure;
+    }
+
+    private OpenQasmMeasureStatement ParseMeasurementAssignment()
+    {
+        OpenQasmBitReference bit = ParseBitReference();
+
+        Consume(OpenQasmTokenKind.Equals, "Expected '=' in measurement assignment.");
+        Consume(OpenQasmTokenKind.Measure, "Expected 'measure' in measurement assignment.");
+
+        OpenQasmQubitReference qubit = ParseQubitReference();
+
+        Consume(OpenQasmTokenKind.Semicolon, "Expected ';' after measurement.");
+
+        return new OpenQasmMeasureStatement(qubit, bit);
+    }
+
+    private OpenQasmMeasureStatement ParseLegacyMeasurement()
+    {
+        OpenQasmQubitReference qubit = ParseQubitReference();
+
+        Consume(OpenQasmTokenKind.Arrow, "Expected '->' after measured qubit.");
+
+        OpenQasmBitReference bit = ParseBitReference();
+
+        Consume(OpenQasmTokenKind.Semicolon, "Expected ';' after measurement.");
+
+        return new OpenQasmMeasureStatement(qubit, bit);
+    }
+
+    private OpenQasmBitReference ParseBitReference()
+    {
+        OpenQasmToken name = Consume(OpenQasmTokenKind.Identifier, "Expected bit register name.");
+
+        Consume(OpenQasmTokenKind.OpenBracket, "Expected '[' after bit register name.");
+        int index = ParseIntegerLiteral();
+        Consume(OpenQasmTokenKind.CloseBracket, "Expected ']' after bit index.");
+
+        return new OpenQasmBitReference(name.Text, index);
+    }
+
+    private OpenQasmResetStatement ParseResetStatement()
+    {
+        OpenQasmQubitReference qubit = ParseQubitReference();
+        Consume(OpenQasmTokenKind.Semicolon, "Expected ';' after reset statement.");
+
+        return new OpenQasmResetStatement(qubit);
+    }
+
+    private OpenQasmBarrierStatement ParseBarrierStatement()
+    {
+        var qubits = new List<OpenQasmQubitReference>();
+
+        do
+        {
+            qubits.Add(ParseQubitReference());
+        }
+        while (Match(OpenQasmTokenKind.Comma));
+
+        Consume(OpenQasmTokenKind.Semicolon, "Expected ';' after barrier statement.");
+
+        return new OpenQasmBarrierStatement(qubits);
     }
 }

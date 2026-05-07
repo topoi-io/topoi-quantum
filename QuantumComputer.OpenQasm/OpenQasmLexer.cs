@@ -49,6 +49,14 @@ public sealed class OpenQasmLexer
         if (c == '"')
             return ReadString();
 
+        if (c == '-' && Peek() == '>')
+        {
+            Advance();
+            Advance();
+
+            return new OpenQasmToken(OpenQasmTokenKind.Arrow, "->", line, column);
+        }
+
         Advance();
 
         return c switch
@@ -63,6 +71,9 @@ public sealed class OpenQasmLexer
             '-' => new OpenQasmToken(OpenQasmTokenKind.Minus, "-", line, column),
             '*' => new OpenQasmToken(OpenQasmTokenKind.Star, "*", line, column),
             '/' => new OpenQasmToken(OpenQasmTokenKind.Slash, "/", line, column),
+            '=' => new OpenQasmToken(OpenQasmTokenKind.Equals, "=", line, column),
+            '{' => new OpenQasmToken(OpenQasmTokenKind.OpenBrace, "{", line, column),
+            '}' => new OpenQasmToken(OpenQasmTokenKind.CloseBrace, "}", line, column),
             _ => throw new OpenQasmParseException($"Unexpected character '{c}'", line, column)
         };
     }
@@ -83,6 +94,11 @@ public sealed class OpenQasmLexer
             "OPENQASM" => OpenQasmTokenKind.OpenQasm,
             "include" => OpenQasmTokenKind.Include,
             "qubit" => OpenQasmTokenKind.Qubit,
+            "bit" => OpenQasmTokenKind.Bit,
+            "measure" => OpenQasmTokenKind.Measure,
+            "reset" => OpenQasmTokenKind.Reset,
+            "barrier" => OpenQasmTokenKind.Barrier,
+            "gate" => OpenQasmTokenKind.Gate,
             "pi" => OpenQasmTokenKind.Pi,
             _ => OpenQasmTokenKind.Identifier
         };
