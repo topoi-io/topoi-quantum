@@ -13,6 +13,8 @@ public enum OpenQasmTokenKind
     CloseParen,
     OpenBracket,
     CloseBracket,
+    OpenBrace,
+    CloseBrace,
     Comma,
     Semicolon,
 
@@ -31,7 +33,5 @@ public enum OpenQasmTokenKind
     Barrier,
     Arrow,
     Equals,
-    OpenBrace,
-    CloseBrace,
     Gate
 }

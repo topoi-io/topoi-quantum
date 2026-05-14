@@ -68,18 +68,14 @@ public static class OpenQasmExecutableConverter
             operations);
     }
 
-    private static GateOperation ConvertGateCall(
-        OpenQasmGateCallStatement gateCall,
-        IReadOnlyDictionary<string, (int Offset, int Size)> registers)
+    private static GateOperation ConvertGateCall(OpenQasmGateCallStatement gateCall, IReadOnlyDictionary<string, (int Offset, int Size)> registers)
     {
-        int[] qubits = gateCall.Qubits.Select(q => ResolveQubit(q, registers)).ToArray();
+        int[] qubits = gateCall.Qubits.Select(q => ResolveGateQubitOperand(q, registers)).ToArray();
 
         return OpenQasmGateMapper.Map(gateCall, qubits);
     }
 
-    private static int ResolveQubit(
-        OpenQasmQubitReference qubit,
-        IReadOnlyDictionary<string, (int Offset, int Size)> registers)
+    private static int ResolveQubit(OpenQasmQubitReference qubit, IReadOnlyDictionary<string, (int Offset, int Size)> registers)
     {
         if (!registers.TryGetValue(qubit.RegisterName, out var register))
             throw new OpenQasmParseException($"Unknown qubit register '{qubit.RegisterName}'.", 1, 1);
@@ -93,9 +89,7 @@ public static class OpenQasmExecutableConverter
         return register.Offset + qubit.Index;
     }
 
-    private static int ResolveBit(
-        OpenQasmBitReference bit,
-        IReadOnlyDictionary<string, (int Offset, int Size)> registers)
+    private static int ResolveBit(OpenQasmBitReference bit, IReadOnlyDictionary<string, (int Offset, int Size)> registers)
     {
         if (!registers.TryGetValue(bit.RegisterName, out var register))
             throw new OpenQasmParseException($"Unknown bit register '{bit.RegisterName}'.", 1, 1);
@@ -107,5 +101,34 @@ public static class OpenQasmExecutableConverter
                 1);
 
         return register.Offset + bit.Index;
+    }
+
+    private static int ResolveGateQubitOperand(OpenQasmQubitOperand qubit, IReadOnlyDictionary<string, (int Offset, int Size)> registers)
+    {
+        if (qubit.Index is null)
+        {
+            throw new OpenQasmParseException(
+                $"Gate call qubit '{qubit.Name}' must be an indexed qubit outside a gate definition.",
+                1,
+                1);
+        }
+
+        if (!registers.TryGetValue(qubit.Name, out var register))
+        {
+            throw new OpenQasmParseException(
+                $"Unknown qubit register '{qubit.Name}'.",
+                1,
+                1);
+        }
+
+        if ((uint)qubit.Index.Value >= (uint)register.Size)
+        {
+            throw new OpenQasmParseException(
+                $"Qubit index {qubit.Index.Value} is out of range for register '{qubit.Name}' of size {register.Size}.",
+                1,
+                1);
+        }
+
+        return register.Offset + qubit.Index.Value;
     }
 }

@@ -63,6 +63,9 @@ public sealed class OpenQasmParser
         if (Match(OpenQasmTokenKind.Bit))
             return ParseBitDeclaration();
 
+        if (Match(OpenQasmTokenKind.Gate))
+            return ParseGateDefinition();
+
         if (Check(OpenQasmTokenKind.Identifier) && PeekKind(1) == OpenQasmTokenKind.OpenBracket)
         {
             // Could be c[0] = measure q[0];
@@ -128,11 +131,11 @@ public sealed class OpenQasmParser
             Consume(OpenQasmTokenKind.CloseParen, "Expected ')' after gate parameters.");
         }
 
-        var qubits = new List<OpenQasmQubitReference>();
+        var qubits = new List<OpenQasmQubitOperand>();
 
         do
         {
-            qubits.Add(ParseQubitReference());
+            qubits.Add(ParseQubitOperand());
         }
         while (Match(OpenQasmTokenKind.Comma));
 
@@ -377,5 +380,86 @@ public sealed class OpenQasmParser
         Consume(OpenQasmTokenKind.Semicolon, "Expected ';' after barrier statement.");
 
         return new OpenQasmBarrierStatement(qubits);
+    }
+
+    private OpenQasmGateDefinitionStatement ParseGateDefinition()
+    {
+        OpenQasmToken name = Consume(OpenQasmTokenKind.Identifier, "Expected gate name.");
+
+        var parameters = new List<string>();
+
+        if (Match(OpenQasmTokenKind.OpenParen))
+        {
+            if (!Check(OpenQasmTokenKind.CloseParen))
+            {
+                do
+                {
+                    OpenQasmToken parameter = Consume(
+                        OpenQasmTokenKind.Identifier,
+                        "Expected gate parameter name.");
+
+                    parameters.Add(parameter.Text);
+                }
+                while (Match(OpenQasmTokenKind.Comma));
+            }
+
+            Consume(OpenQasmTokenKind.CloseParen, "Expected ')' after gate parameter list.");
+        }
+
+        var qubitParameters = new List<string>();
+
+        do
+        {
+            OpenQasmToken qubitParameter = Consume(
+                OpenQasmTokenKind.Identifier,
+                "Expected gate qubit argument name.");
+
+            qubitParameters.Add(qubitParameter.Text);
+        }
+        while (Match(OpenQasmTokenKind.Comma));
+
+        Consume(OpenQasmTokenKind.OpenBrace, "Expected '{' before gate body.");
+
+        var body = new List<OpenQasmGateCallStatement>();
+
+        while (!Check(OpenQasmTokenKind.CloseBrace))
+        {
+            if (Check(OpenQasmTokenKind.EndOfFile))
+                throw Error(Current, "Unterminated gate definition body.");
+
+            if (!Check(OpenQasmTokenKind.Identifier))
+                throw Error(Current, "Only gate calls are currently supported inside gate definitions.");
+
+            body.Add(ParseGateCall());
+        }
+
+        Consume(OpenQasmTokenKind.CloseBrace, "Expected '}' after gate body.");
+
+        if (qubitParameters.Count != qubitParameters.Distinct().Count())
+            throw Error(name, $"Gate '{name.Text}' contains duplicate qubit parameter names.");
+
+        if (parameters.Count != parameters.Distinct().Count())
+            throw Error(name, $"Gate '{name.Text}' contains duplicate angle parameter names.");
+
+        return new OpenQasmGateDefinitionStatement(
+            name.Text,
+            parameters,
+            qubitParameters,
+            body);
+    }
+
+    private OpenQasmQubitOperand ParseQubitOperand()
+    {
+        OpenQasmToken name = Consume(OpenQasmTokenKind.Identifier, "Expected qubit name.");
+
+        if (Match(OpenQasmTokenKind.OpenBracket))
+        {
+            int index = ParseIntegerLiteral();
+            Consume(OpenQasmTokenKind.CloseBracket, "Expected ']' after qubit index.");
+
+            return new OpenQasmQubitOperand(name.Text, index);
+        }
+
+        return new OpenQasmQubitOperand(name.Text, null);
     }
 }

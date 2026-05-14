@@ -11,8 +11,9 @@ public static class OpenQasmCircuitLoader
 
         var parser = new OpenQasmParser(tokens);
         OpenQasmProgram program = parser.ParseProgram();
+        OpenQasmProgram expandedProgram = OpenQasmGateDefinitionExpander.Expand(program);
 
-        return OpenQasmCircuitConverter.Convert(program);
+        return OpenQasmCircuitConverter.Convert(expandedProgram);
     }
 
     public static QuantumCircuit LoadFromFile(string path)
@@ -35,8 +36,9 @@ public static class OpenQasmCircuitLoader
 
         var parser = new OpenQasmParser(tokens);
         OpenQasmProgram program = parser.ParseProgram();
+        OpenQasmProgram expandedProgram = OpenQasmGateDefinitionExpander.Expand(program);
 
-        return OpenQasmExecutableConverter.Convert(program);
+        return OpenQasmExecutableConverter.Convert(expandedProgram);
     }
 
     public static OpenQasmExecutableProgram LoadExecutableFromFile(string path)
