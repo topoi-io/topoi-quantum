@@ -3,7 +3,7 @@
 
 A small, educational N-qubit quantum computer simulator written in C# and .NET 10.
 
-The simulator supports unitary gates, entanglement, measurement collapse, repeated sampling, Pauli expectation values, script execution, gate-only circuit loading, Unicode circuit drawing, command-line execution, initial OpenQASM 3.1 import support, seeded randomness for repeatable simulations, and an instance-based simulation API.
+The simulator supports unitary gates, entanglement, measurement collapse, repeated sampling, Pauli expectation values, script execution, gate-only circuit loading, Unicode circuit drawing, command-line execution, OpenQASM 3.1 import, OpenQASM execution, OpenQASM export, seeded randomness for repeatable simulations, and an instance-based simulation API.
 
 The project is intentionally focused on **clarity, correctness, and educational value** rather than high-performance quantum simulation.
 
@@ -13,11 +13,12 @@ The project is intentionally focused on **clarity, correctness, and educational 
 
 This project simulates pure quantum states using a dense state-vector model.
 
-It can be used in three ways:
+It can be used in four ways:
 
 1. **Interactive REPL**
 2. **Command-line execution**
-3. **Reusable simulator library API**
+3. **OpenQASM 3.1 import/export**
+4. **Reusable simulator library API**
 
 The solution is split into separate projects:
 
@@ -31,7 +32,13 @@ QuantumComputer.OpenQasm
 QuantumComputer.Tests
 ~~~
 
-This keeps the quantum simulation engine independent from CLI, parsing, drawing, OpenQASM import, and console output.
+This keeps the quantum simulation engine independent from CLI, parsing, drawing, OpenQASM import/export, and console output.
+
+---
+
+## Core Technology
+
+The simulator uses a **C#/.NET 10 dense state-vector quantum circuit simulation model**, where an N-qubit quantum state is represented as `2^n` complex amplitudes and quantum gates are applied by updating that state vector.
 
 ---
 
@@ -41,12 +48,20 @@ This keeps the quantum simulation engine independent from CLI, parsing, drawing,
 - Instance-based `QuantumSimulator`
 - Static `Quantum` facade for simple interactive usage
 - Standard single-qubit gates:
-  - X, Y, Z, H, S, T
+  - I / ID
+  - X, Y, Z
+  - H
+  - S, SDG
+  - T, TDG
+  - SX, SXDG
 - Rotation gates:
   - RX, RY, RZ
 - Controlled and entangling gates:
   - CX / CNOT
+  - CY
   - CZ
+  - CH
+  - CP
   - SWAP
   - CCX / Toffoli
 - Controlled rotation gates:
@@ -67,8 +82,15 @@ This keeps the quantum simulation engine independent from CLI, parsing, drawing,
 - Unicode circuit drawing using `DRAW`
 - Command-line script and circuit execution
 - Command-line circuit drawing using `--draw`
-- Initial OpenQASM 3.1 import support
+- OpenQASM 3.1 import support
 - OpenQASM circuit execution using `--qasm <path>`
+- OpenQASM export from `QuantumCircuit`
+- OpenQASM `stdgates.inc` subset support
+- OpenQASM bit declarations
+- OpenQASM measurement into classical bits
+- OpenQASM reset support
+- OpenQASM barrier support as a no-op marker
+- OpenQASM non-parameterized custom gate definitions
 - Cryptographically strong randomness by default
 - Seeded randomness support for repeatable tests/simulations
 - NUnit regression tests
@@ -87,7 +109,7 @@ This keeps the quantum simulation engine independent from CLI, parsing, drawing,
 ## Solution Structure
 
 ~~~text
-QuantumComputer.sln
+QuantumComputer.slnx
 
 QuantumComputer
 ├── Program.cs
@@ -122,29 +144,49 @@ QuantumComputer.Drawing
 └── CircuitDrawer.cs
 
 QuantumComputer.OpenQasm
+├── OpenQasmBitReference.cs
 ├── OpenQasmCircuitConverter.cs
 ├── OpenQasmCircuitLoader.cs
+├── OpenQasmExecutableConverter.cs
+├── OpenQasmExecutableOperation.cs
+├── OpenQasmExecutableProgram.cs
+├── OpenQasmExecutionResult.cs
+├── OpenQasmExecutor.cs
+├── OpenQasmExporter.cs
+├── OpenQasmGateDefinitionExpander.cs
+├── OpenQasmGateMapper.cs
 ├── OpenQasmLexer.cs
 ├── OpenQasmParseException.cs
 ├── OpenQasmParser.cs
 ├── OpenQasmProgram.cs
+├── OpenQasmQubitOperand.cs
 ├── OpenQasmQubitReference.cs
 ├── OpenQasmStatement.cs
 ├── OpenQasmToken.cs
 └── OpenQasmTokenKind.cs
 
 QuantumComputer.Tests
+├── AdditionalStandardGateTests.cs
 ├── CircuitDrawerTests.cs
 ├── ControlledRotationTests.cs
 ├── EntanglementTests.cs
 ├── ExpectationValueTests.cs
 ├── MeasurementTests.cs
+├── OpenQasmExporterTests.cs
+├── OpenQasmExecutableTests.cs
+├── OpenQasmGateDefinitionTests.cs
 ├── OpenQasmParserTests.cs
 ├── PhaseGateTests.cs
 ├── QuantumCircuitTests.cs
 ├── QuantumSimulatorTests.cs
 ├── SingleQubitGateTests.cs
 └── TestHelpers.cs
+
+examples
+├── bell.qasm
+├── custom-bell.qasm
+├── ghz3.qasm
+└── rotations.qasm
 ~~~
 
 ---
@@ -155,7 +197,7 @@ QuantumComputer.Tests
 
 Contains the core quantum simulation engine.
 
-This project has no dependency on CLI, drawing, parsing, OpenQASM import, or console output.
+This project has no dependency on CLI, drawing, parsing, OpenQASM, or console output.
 
 It contains:
 
@@ -204,7 +246,7 @@ It depends on `QuantumComputer.Core`, but the core simulator does not depend on 
 
 ### `QuantumComputer.OpenQasm`
 
-Contains initial OpenQASM 3.1 import support.
+Contains OpenQASM 3.1 import, execution-model support, custom-gate expansion, and export.
 
 It contains:
 
@@ -213,7 +255,11 @@ It contains:
 - OpenQASM parser
 - OpenQASM AST models
 - OpenQASM-to-`QuantumCircuit` converter
-- OpenQASM circuit loader
+- OpenQASM executable-program model
+- OpenQASM executor
+- OpenQASM standard-gate mapper
+- OpenQASM custom-gate definition expander
+- OpenQASM exporter
 
 ### `QuantumComputer`
 
@@ -223,7 +269,7 @@ The console application startup project.
 
 ### `QuantumComputer.Tests`
 
-NUnit test project covering the simulator, circuit model, drawing, measurement, entanglement, rotations, expectations, seeded randomness, and OpenQASM import.
+NUnit test project covering the simulator, circuit model, drawing, measurement, entanglement, rotations, expectations, seeded randomness, OpenQASM import, OpenQASM execution, OpenQASM export, and custom-gate expansion.
 
 ---
 
@@ -235,9 +281,8 @@ The intended dependency direction is:
 QuantumComputer
     ↓
 QuantumComputer.Cli
-    ↓
-QuantumComputer.Parsing
 QuantumComputer.Drawing
+QuantumComputer.Parsing
 QuantumComputer.OpenQasm
     ↓
 QuantumComputer.Core
@@ -249,7 +294,7 @@ The core rule is:
 Core must not depend on CLI, Drawing, Parsing, OpenQASM, or the console app.
 ~~~
 
-The simulator engine is therefore reusable independently of the REPL, CLI, drawing system, native parser, or OpenQASM importer.
+The simulator engine is therefore reusable independently of the REPL, CLI, drawing system, native parser, and OpenQASM tooling.
 
 ---
 
@@ -338,6 +383,12 @@ Load and run an OpenQASM circuit:
 dotnet run --project QuantumComputer -- --qasm examples/bell.qasm --draw --print --expect "ZZ 0 1"
 ~~~
 
+Load and run an OpenQASM custom-gate circuit:
+
+~~~bash
+dotnet run --project QuantumComputer -- --qasm examples/custom-bell.qasm --draw --print --expect "ZZ 0 1"
+~~~
+
 Draw a Bell circuit and compute expectations:
 
 ~~~bash
@@ -360,9 +411,9 @@ dotnet run --project QuantumComputer -- --qubits 3 --circuit circuits/toffoli.qc
 
 ## OpenQASM 3.1 Support
 
-The simulator includes an initial OpenQASM 3.1 importer.
+The simulator includes OpenQASM 3.1 import and export support.
 
-This importer currently converts a supported gate-only subset of OpenQASM 3.1 into the simulator's `QuantumCircuit` model.
+The importer currently supports a practical subset of OpenQASM 3.1 that can be mapped onto the simulator's dense state-vector execution model.
 
 Currently supported:
 
@@ -371,19 +422,288 @@ Currently supported:
 - `OPENQASM 3.1;`
 - `include "stdgates.inc";`
 - `qubit[n] q;`
-- Standard gate calls:
-  - `x`, `y`, `z`, `h`, `s`, `t`
-  - `rx`, `ry`, `rz`
-  - `cx`, `cz`, `swap`, `ccx`
-  - `crx`, `cry`, `crz`
-- Angle expressions using:
-  - numbers
-  - `pi`
-  - `+`, `-`, `*`, `/`
-  - parentheses
+- `bit[n] c;`
+- Standard gate calls
+- Measurement into classical bits
+- Reset
+- Barrier as a no-op marker
+- Non-parameterized custom gate definitions
+- OpenQASM export from `QuantumCircuit`
 - Line comments using `//`
 
-Example OpenQASM file:
+---
+
+## Supported OpenQASM Standard Gates
+
+The following OpenQASM standard-library gates are currently supported:
+
+### Single-qubit gates
+
+~~~qasm
+id q[0];
+x q[0];
+y q[0];
+z q[0];
+h q[0];
+s q[0];
+sdg q[0];
+t q[0];
+tdg q[0];
+sx q[0];
+sxdg q[0];
+~~~
+
+### Rotation gates
+
+~~~qasm
+rx(pi / 2) q[0];
+ry(pi / 3) q[0];
+rz(pi) q[0];
+~~~
+
+### Two-qubit gates
+
+~~~qasm
+cx q[0], q[1];
+cy q[0], q[1];
+cz q[0], q[1];
+ch q[0], q[1];
+cp(pi / 2) q[0], q[1];
+swap q[0], q[1];
+~~~
+
+### Three-qubit gates
+
+~~~qasm
+ccx q[0], q[1], q[2];
+~~~
+
+### Controlled rotation gates
+
+~~~qasm
+crx(pi / 2) q[0], q[1];
+cry(pi / 2) q[0], q[1];
+crz(pi / 2) q[0], q[1];
+~~~
+
+---
+
+## OpenQASM Angle Expressions
+
+OpenQASM angle expressions currently support:
+
+- numbers
+- `pi`
+- `+`
+- `-`
+- `*`
+- `/`
+- parentheses
+
+Examples:
+
+~~~qasm
+rx(pi / 2) q[0];
+ry(3 * pi / 4) q[0];
+rz((pi + pi) / 2) q[0];
+cp(pi / 2) q[0], q[1];
+~~~
+
+---
+
+## OpenQASM Measurement Support
+
+The executable OpenQASM model supports classical bit declarations and measurement into classical bits.
+
+Supported declaration:
+
+~~~qasm
+bit[2] c;
+~~~
+
+Supported measurement assignment syntax:
+
+~~~qasm
+c[0] = measure q[0];
+c[1] = measure q[1];
+~~~
+
+Legacy measurement syntax is also supported:
+
+~~~qasm
+measure q[0] -> c[0];
+measure q[1] -> c[1];
+~~~
+
+Example:
+
+~~~qasm
+OPENQASM 3.1;
+include "stdgates.inc";
+
+qubit[2] q;
+bit[2] c;
+
+h q[0];
+cx q[0], q[1];
+
+c[0] = measure q[0];
+c[1] = measure q[1];
+~~~
+
+Measurement collapses the quantum state and stores the result in the target classical bit.
+
+---
+
+## OpenQASM Reset Support
+
+Reset is supported for individual qubits:
+
+~~~qasm
+reset q[0];
+~~~
+
+The simulator implements reset by measuring the qubit and applying `x` if the measured result is `1`.
+
+Example:
+
+~~~qasm
+OPENQASM 3.1;
+include "stdgates.inc";
+
+qubit[1] q;
+
+x q[0];
+reset q[0];
+~~~
+
+After reset, `q[0]` is returned to `|0⟩`.
+
+---
+
+## OpenQASM Barrier Support
+
+Barrier is supported as a no-op circuit marker.
+
+Example:
+
+~~~qasm
+OPENQASM 3.1;
+include "stdgates.inc";
+
+qubit[2] q;
+
+h q[0];
+barrier q[0], q[1];
+cx q[0], q[1];
+~~~
+
+In this simulator, `barrier` does not change the quantum state. It is currently preserved in the executable OpenQASM operation model but ignored during execution.
+
+---
+
+## OpenQASM Custom Gate Definitions
+
+The simulator supports non-parameterized OpenQASM custom gate definitions.
+
+Example:
+
+~~~qasm
+OPENQASM 3.1;
+include "stdgates.inc";
+
+gate bell a, b {
+    h a;
+    cx a, b;
+}
+
+qubit[2] q;
+
+bell q[0], q[1];
+~~~
+
+This expands internally to:
+
+~~~qasm
+h q[0];
+cx q[0], q[1];
+~~~
+
+Run from the command line:
+
+~~~bash
+dotnet run --project QuantumComputer -- --qasm examples/custom-bell.qasm --draw --print --expect "ZZ 0 1"
+~~~
+
+Expected drawing:
+
+~~~text
+q0: ─H──●─
+        │
+q1: ────X─
+~~~
+
+Nested custom gate definitions are also supported:
+
+~~~qasm
+OPENQASM 3.1;
+include "stdgates.inc";
+
+gate flip a {
+    x a;
+}
+
+gate doubleflip a {
+    flip a;
+    flip a;
+}
+
+qubit[1] q;
+
+doubleflip q[0];
+~~~
+
+The expander detects recursive gate definitions and throws an `OpenQasmParseException`.
+
+Currently supported:
+
+- non-parameterized custom gates
+- custom gates that call standard gates
+- custom gates that call earlier custom gates
+- nested custom-gate expansion
+- duplicate gate definition detection
+- recursion detection
+
+Not yet supported:
+
+- parameterized custom gate definitions
+- custom gate angle-parameter substitution
+- custom gate bodies containing measurement/reset/barrier
+- custom gate modifiers such as `ctrl`, `negctrl`, `inv`, or `pow`
+
+---
+
+## OpenQASM Export
+
+The simulator can export a `QuantumCircuit` to OpenQASM 3.1.
+
+Example:
+
+~~~csharp
+using QuantumComputer.Core;
+using QuantumComputer.OpenQasm;
+
+var circuit = new QuantumCircuit(2);
+
+circuit.Add(new GateOperation(GateKind.H, new[] { 0 }));
+circuit.Add(new GateOperation(GateKind.CX, new[] { 0, 1 }));
+
+string qasm = OpenQasmExporter.Export(circuit);
+
+Console.WriteLine(qasm);
+~~~
+
+Output:
 
 ~~~qasm
 OPENQASM 3.1;
@@ -395,59 +715,54 @@ h q[0];
 cx q[0], q[1];
 ~~~
 
-Run from the command line:
+The exporter currently targets gate-only `QuantumCircuit` instances.
 
-~~~bash
-dotnet run --project QuantumComputer -- --qasm examples/bell.qasm --draw --print --expect "ZZ 0 1"
-~~~
+It exports:
 
-Example rotation file:
+- standard gates
+- rotation gates
+- controlled gates
+- controlled rotation gates
+- qubit declarations
 
-~~~qasm
-OPENQASM 3.1;
-include "stdgates.inc";
+It does not yet export:
 
-qubit[1] q;
+- bit declarations
+- measurements
+- reset
+- barrier
+- custom gate definitions
+- comments
+- formatting metadata
 
-ry(pi / 3) q[0];
-~~~
+---
 
-Run from the command line:
+## OpenQASM Limitations
 
-~~~bash
-dotnet run --project QuantumComputer -- --qasm examples/rotations.qasm --draw --print --expect "Z 0"
-~~~
+The OpenQASM support is intentionally a focused subset.
 
-Expected result after `ry(pi / 3)` on `|0⟩`:
+Currently not supported:
 
-~~~text
-P(|0⟩) = 0.75
-P(|1⟩) = 0.25
-⟨Z0⟩ = 0.5
-~~~
-
-Not yet supported:
-
-- `bit`
-- `measure`
-- `reset`
-- `barrier`
+- parameterized custom gate definitions
+- parameterized custom gate expansion
+- OpenQASM aliases
+- physical qubits
+- timing and duration types
 - `delay`
 - `box`
 - `def`
-- `gate`
 - `defcal`
 - `cal`
 - `if`
 - `for`
 - `while`
-- aliases
-- physical qubits
-- timing/duration types
 - arbitrary classical declarations
-- OpenQASM export
-
-This is intentionally described as **initial OpenQASM 3.1 import support**, not full OpenQASM 3.1 compliance.
+- arrays
+- structs
+- input/output declarations
+- gate modifiers such as `ctrl`, `negctrl`, `inv`, `pow`
+- full OpenQASM semantic validation
+- full source-span diagnostics
 
 ---
 
@@ -472,12 +787,18 @@ MEM                         Show estimated dense state-vector memory usage
 All single-qubit gates require a target qubit index.
 
 ~~~text
+I q                         Identity gate on qubit q
+ID q                        Alias for I, if enabled in parser/CLI
 X q                         Pauli-X / bit flip on qubit q
 Y q                         Pauli-Y on qubit q
 Z q                         Pauli-Z / phase flip on qubit q
 H q                         Hadamard gate on qubit q
 S q                         Phase gate on qubit q
+SDG q                       Inverse S gate on qubit q
 T q                         Pi-over-8 gate on qubit q
+TDG q                       Inverse T gate on qubit q
+SX q                        Square-root of X gate on qubit q
+SXDG q                      Inverse square-root of X gate on qubit q
 ~~~
 
 Examples:
@@ -486,6 +807,9 @@ Examples:
 X 0
 H 1
 Z 2
+SX 0
+SDG 1
+TDG 2
 ~~~
 
 ---
@@ -535,7 +859,10 @@ rz((pi + pi) / 2) q[0];
 ~~~text
 CX c t                      Controlled-X / CNOT
 CNOT c t                    Alias for CX
+CY c t                      Controlled-Y
 CZ c t                      Controlled-Z
+CH c t                      Controlled-H
+CP c t theta                Controlled phase
 SWAP q1 q2                  Swap two qubits
 CCX c1 c2 t                 Toffoli gate
 TOFFOLI c1 c2 t             Alias for CCX
@@ -545,7 +872,10 @@ Examples:
 
 ~~~text
 CX 0 1
+CY 0 1
 CZ 0 1
+CH 0 1
+CP 0 1 pi/2
 SWAP 0 2
 CCX 0 1 2
 ~~~
@@ -988,6 +1318,45 @@ Expected probabilities:
 
 ---
 
+### `examples/custom-bell.qasm`
+
+~~~qasm
+OPENQASM 3.1;
+include "stdgates.inc";
+
+gate bell a, b {
+    h a;
+    cx a, b;
+}
+
+qubit[2] q;
+
+bell q[0], q[1];
+~~~
+
+Run from the command line:
+
+~~~bash
+dotnet run --project QuantumComputer -- --qasm examples/custom-bell.qasm --draw --print --expect "ZZ 0 1"
+~~~
+
+Expected drawing:
+
+~~~text
+q0: ─H──●─
+        │
+q1: ────X─
+~~~
+
+Expected probabilities:
+
+~~~text
+|00⟩  P = 0.500000
+|11⟩  P = 0.500000
+~~~
+
+---
+
 ### `examples/ghz3.qasm`
 
 ~~~qasm
@@ -1039,6 +1408,65 @@ Expected probabilities:
 |0⟩  P = 0.750000
 |1⟩  P = 0.250000
 ~~~
+
+Expected Z expectation:
+
+~~~text
+⟨Z0⟩ = 0.5
+~~~
+
+---
+
+### OpenQASM measurement example
+
+~~~qasm
+OPENQASM 3.1;
+include "stdgates.inc";
+
+qubit[2] q;
+bit[2] c;
+
+h q[0];
+cx q[0], q[1];
+
+c[0] = measure q[0];
+c[1] = measure q[1];
+~~~
+
+This creates a Bell state and then measures both qubits into classical bits.
+
+---
+
+### OpenQASM reset example
+
+~~~qasm
+OPENQASM 3.1;
+include "stdgates.inc";
+
+qubit[1] q;
+
+x q[0];
+reset q[0];
+~~~
+
+After execution, the qubit has been reset to `|0⟩`.
+
+---
+
+### OpenQASM barrier example
+
+~~~qasm
+OPENQASM 3.1;
+include "stdgates.inc";
+
+qubit[2] q;
+
+h q[0];
+barrier q[0], q[1];
+cx q[0], q[1];
+~~~
+
+The barrier is accepted and treated as a no-op during simulation.
 
 ---
 
@@ -1136,6 +1564,71 @@ cx q[0], q[1];
 """;
 
 QuantumCircuit circuit = OpenQasmCircuitLoader.LoadFromString(source);
+~~~
+
+Loading an OpenQASM custom-gate circuit:
+
+~~~csharp
+using QuantumComputer.Core;
+using QuantumComputer.OpenQasm;
+
+const string source = """
+OPENQASM 3.1;
+include "stdgates.inc";
+
+gate bell a, b {
+    h a;
+    cx a, b;
+}
+
+qubit[2] q;
+
+bell q[0], q[1];
+""";
+
+QuantumCircuit circuit = OpenQasmCircuitLoader.LoadFromString(source);
+~~~
+
+Executing an OpenQASM program with classical bits:
+
+~~~csharp
+using QuantumComputer.OpenQasm;
+
+const string source = """
+OPENQASM 3.1;
+include "stdgates.inc";
+
+qubit[2] q;
+bit[2] c;
+
+h q[0];
+cx q[0], q[1];
+
+c[0] = measure q[0];
+c[1] = measure q[1];
+""";
+
+OpenQasmExecutableProgram program =
+    OpenQasmCircuitLoader.LoadExecutableFromString(source);
+
+OpenQasmExecutionResult result =
+    OpenQasmExecutor.Execute(program);
+
+int[] classicalBits = result.ClassicalBits;
+~~~
+
+Exporting a circuit to OpenQASM:
+
+~~~csharp
+using QuantumComputer.Core;
+using QuantumComputer.OpenQasm;
+
+var circuit = new QuantumCircuit(2);
+
+circuit.Add(new GateOperation(GateKind.H, new[] { 0 }));
+circuit.Add(new GateOperation(GateKind.CX, new[] { 0, 1 }));
+
+string qasm = OpenQasmExporter.Export(circuit);
 ~~~
 
 ---
@@ -1246,9 +1739,14 @@ dotnet test
 The tests cover:
 
 - Single-qubit gate behaviour
+- Identity gate behaviour
 - Phase gate amplitudes
+- Inverse phase gates
+- Square-root X gates
 - Rotation gates
+- Controlled gates
 - Controlled rotation gates
+- Controlled phase gate
 - Bell-state preparation
 - GHZ-state preparation
 - SWAP behaviour
@@ -1260,10 +1758,19 @@ The tests cover:
 - QuantumCircuit execution
 - Circuit validation
 - Unicode circuit drawing
-- OpenQASM 3.1 tokenization/parsing
+- OpenQASM tokenization/parsing
 - OpenQASM-to-`QuantumCircuit` conversion
+- OpenQASM executable-program conversion
+- OpenQASM measurement into classical bits
+- OpenQASM reset
+- OpenQASM barrier no-op behaviour
 - OpenQASM Bell and GHZ circuit execution
 - OpenQASM rotation angle parsing
+- OpenQASM additional standard gates
+- OpenQASM custom-gate expansion
+- OpenQASM recursive gate detection
+- OpenQASM export
+- OpenQASM import/export round trips
 
 ---
 
@@ -1290,8 +1797,11 @@ The tests cover:
 - Circuit drawing is handled outside Core by `QuantumComputer.Drawing`
 - CLI and console output are handled outside Core by `QuantumComputer.Cli`
 - Native `.qc` text parsing is handled outside Core by `QuantumComputer.Parsing`
-- OpenQASM import is handled outside Core by `QuantumComputer.OpenQasm`
-- OpenQASM import currently targets the existing gate-only `QuantumCircuit` model
+- OpenQASM import/export is handled outside Core by `QuantumComputer.OpenQasm`
+- OpenQASM gate-only import can produce a `QuantumCircuit`
+- OpenQASM programs containing measurement/reset/barrier use an executable program model
+- OpenQASM custom gates are expanded before circuit conversion/execution
+- OpenQASM export currently targets gate-only `QuantumCircuit` instances
 
 ---
 
@@ -1337,11 +1847,15 @@ This limit is intentional because dense state-vector simulators grow exponential
 - No noise model
 - No decoherence model
 - No Bloch sphere visualization
-- OpenQASM 3.1 support is currently limited to a gate-only import subset
-- No OpenQASM export yet
-- No OpenQASM measurement support yet
-- No OpenQASM classical register support yet
-- No OpenQASM custom gate definitions yet
+- OpenQASM 3.1 support is currently a practical subset, not full compliance
+- OpenQASM parameterized custom gate definitions are not supported yet
+- OpenQASM custom gate parameter substitution is not supported yet
+- OpenQASM aliases are not supported yet
+- OpenQASM physical qubits are not supported yet
+- OpenQASM timing/duration types are not supported yet
+- OpenQASM classical control flow is not supported yet
+- OpenQASM gate modifiers are not supported yet
+- OpenQASM export currently supports gate-only `QuantumCircuit` instances
 - No gate optimization
 - No circuit transpilation
 - No hardware backend abstraction
@@ -1354,15 +1868,24 @@ This limit is intentional because dense state-vector simulators grow exponential
 
 ## Possible Extensions
 
-- Expand OpenQASM 3.1 support
-- OpenQASM export
-- OpenQASM `bit` declarations
-- OpenQASM `measure`
-- OpenQASM `reset`
-- OpenQASM `barrier`
-- OpenQASM custom `gate` definitions
+- Parameterized OpenQASM custom gate definitions
+- OpenQASM custom gate angle substitution
+- More complete OpenQASM export
 - OpenQASM aliases
 - OpenQASM classical control flow
+- OpenQASM `if`
+- OpenQASM `for`
+- OpenQASM `while`
+- OpenQASM `delay`
+- OpenQASM `box`
+- OpenQASM `def`
+- OpenQASM `defcal`
+- OpenQASM `cal`
+- OpenQASM gate modifiers:
+  - `ctrl`
+  - `negctrl`
+  - `inv`
+  - `pow`
 - Native circuit export
 - Plain ASCII drawing fallback
 - SVG circuit drawing
@@ -1374,16 +1897,12 @@ This limit is intentional because dense state-vector simulators grow exponential
 - Sparse-state simulation
 - Tensor-network simulation
 - Additional gates:
-  - I
   - P / Phase
-  - SX
-  - SDG
-  - TDG
-  - CY
-  - CH
-  - CS
-  - CT
-  - CP
+  - U
+  - U1
+  - U2
+  - U3
+  - CY variants
   - CCZ
   - arbitrary unitary gates
 - Controlled arbitrary single-qubit gates exposed at command level
@@ -1410,10 +1929,12 @@ This project is a learning tool for:
 - quantum circuits
 - dense state-vector simulation
 - OpenQASM parsing
+- OpenQASM custom-gate expansion
+- OpenQASM export
 - simulator architecture
 - test-driven numerical software
 
-The emphasis is on conceptual correctness, readable implementation, and a clear path from simple single-qubit behaviour to entanglement, circuit representation, command-line execution, testing, OpenQASM import, and multi-qubit simulation.
+The emphasis is on conceptual correctness, readable implementation, and a clear path from simple single-qubit behaviour to entanglement, circuit representation, command-line execution, testing, OpenQASM import/export, custom gate expansion, and multi-qubit simulation.
 
 ---
 
