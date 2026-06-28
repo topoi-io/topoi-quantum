@@ -6,7 +6,10 @@ public sealed record OpenQasmIncludeStatement(string Path) : OpenQasmStatement;
 
 public sealed record OpenQasmQubitDeclaration(string Name, int Size) : OpenQasmStatement;
 
-public sealed record OpenQasmGateCallStatement(string GateName, IReadOnlyList<double> Parameters, IReadOnlyList<OpenQasmQubitOperand> Qubits) : OpenQasmStatement;
+public sealed record OpenQasmGateCallStatement(
+    string GateName,
+    IReadOnlyList<OpenQasmAngleExpression> Parameters,
+    IReadOnlyList<OpenQasmQubitOperand> Qubits) : OpenQasmStatement;
 
 public sealed record OpenQasmBitDeclaration(string Name, int Size) : OpenQasmStatement;
 

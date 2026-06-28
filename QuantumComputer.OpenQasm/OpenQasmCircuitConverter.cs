@@ -122,7 +122,9 @@ public static class OpenQasmCircuitConverter
         if (qubits.Length != expectedQubits)
             throw new OpenQasmParseException($"Gate '{gateCall.GateName}' expects {expectedQubits} qubit(s).", 1, 1);
 
-        return new GateOperation(kind, qubits, gateCall.Parameters[0]);
+        double angle = gateCall.Parameters[0].Evaluate(new Dictionary<string, double>());
+
+        return new GateOperation(kind, qubits, angle);
     }
 
     private static int ResolveGateQubitOperand(OpenQasmQubitOperand qubit, IReadOnlyDictionary<string, (int Offset, int Size)> registers)

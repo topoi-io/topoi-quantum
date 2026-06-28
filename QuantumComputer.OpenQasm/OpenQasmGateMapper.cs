@@ -73,6 +73,8 @@ internal static class OpenQasmGateMapper
         if (qubits.Length != expectedQubits)
             throw new OpenQasmParseException($"Gate '{gateCall.GateName}' expects {expectedQubits} qubit(s).", 1, 1);
 
-        return new GateOperation(kind, qubits, gateCall.Parameters[0]);
+        double angle = gateCall.Parameters[0].Evaluate(new Dictionary<string, double>());
+
+        return new GateOperation(kind, qubits, angle);
     }
 }

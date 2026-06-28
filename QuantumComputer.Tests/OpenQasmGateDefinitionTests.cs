@@ -158,7 +158,7 @@ public sealed class OpenQasmGateDefinitionTests
     }
 
     [Test]
-    public void LoadFromString_ParameterizedGateDefinition_NotYetSupported_Throws()
+    public void LoadFromString_ParameterizedGateDefinition_SubstitutesAngle()
     {
         const string source = """
         OPENQASM 3.1;
@@ -171,6 +171,101 @@ public sealed class OpenQasmGateDefinitionTests
         qubit[1] q;
 
         phase(pi / 2) q[0];
+        """;
+
+        QuantumCircuit circuit = OpenQasmCircuitLoader.LoadFromString(source);
+
+        Assert.That(circuit.Operations.Count, Is.EqualTo(1));
+        Assert.That(circuit.Operations[0].Kind, Is.EqualTo(GateKind.RZ));
+        Assert.That(circuit.Operations[0].Qubits, Is.EqualTo(new[] { 0 }));
+        Assert.That(circuit.Operations[0].Angle, Is.EqualTo(Math.PI / 2).Within(TestHelpers.Tolerance));
+    }
+
+    [Test]
+    public void LoadFromString_ParameterizedGateDefinition_SubstitutesAngleExpression()
+    {
+        const string source = """
+        OPENQASM 3.1;
+        include "stdgates.inc";
+
+        gate half_phase(theta) a {
+            rz(theta / 2) a;
+        }
+
+        qubit[1] q;
+
+        half_phase(pi) q[0];
+        """;
+
+        QuantumCircuit circuit = OpenQasmCircuitLoader.LoadFromString(source);
+
+        Assert.That(circuit.Operations.Count, Is.EqualTo(1));
+        Assert.That(circuit.Operations[0].Kind, Is.EqualTo(GateKind.RZ));
+        Assert.That(circuit.Operations[0].Angle, Is.EqualTo(Math.PI / 2).Within(TestHelpers.Tolerance));
+    }
+
+    [Test]
+    public void LoadFromString_NestedParameterizedGateDefinition_ExpandsCorrectly()
+    {
+        const string source = """
+        OPENQASM 3.1;
+        include "stdgates.inc";
+
+        gate phase(theta) a {
+            rz(theta) a;
+        }
+
+        gate double_phase(theta) a {
+            phase(theta) a;
+            phase(theta) a;
+        }
+
+        qubit[1] q;
+
+        double_phase(pi / 4) q[0];
+        """;
+
+        QuantumCircuit circuit = OpenQasmCircuitLoader.LoadFromString(source);
+
+        Assert.That(circuit.Operations.Count, Is.EqualTo(2));
+
+        Assert.That(circuit.Operations[0].Kind, Is.EqualTo(GateKind.RZ));
+        Assert.That(circuit.Operations[0].Angle, Is.EqualTo(Math.PI / 4).Within(TestHelpers.Tolerance));
+
+        Assert.That(circuit.Operations[1].Kind, Is.EqualTo(GateKind.RZ));
+        Assert.That(circuit.Operations[1].Angle, Is.EqualTo(Math.PI / 4).Within(TestHelpers.Tolerance));
+    }
+
+    [Test]
+    public void LoadFromString_ParameterizedGateDefinition_WithWrongParameterCount_Throws()
+    {
+        const string source = """
+        OPENQASM 3.1;
+        include "stdgates.inc";
+
+        gate phase(theta) a {
+            rz(theta) a;
+        }
+
+        qubit[1] q;
+
+        phase() q[0];
+        """;
+
+        Assert.Throws<OpenQasmParseException>(() =>
+            OpenQasmCircuitLoader.LoadFromString(source));
+    }
+
+    [Test]
+    public void LoadFromString_TopLevelGateCall_WithUnknownAngleSymbol_Throws()
+    {
+        const string source = """
+        OPENQASM 3.1;
+        include "stdgates.inc";
+
+        qubit[1] q;
+
+        rz(theta) q[0];
         """;
 
         Assert.Throws<OpenQasmParseException>(() =>

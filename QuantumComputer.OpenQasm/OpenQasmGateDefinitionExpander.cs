@@ -22,14 +22,6 @@ public static class OpenQasmGateDefinitionExpander
                         1);
                 }
 
-                if (definition.Parameters.Count != 0)
-                {
-                    throw new OpenQasmParseException(
-                        $"Parameterized gate definitions are not supported yet: '{definition.Name}'.",
-                        1,
-                        1);
-                }
-
                 definitions[definition.Name] = definition;
                 continue;
             }
@@ -67,10 +59,11 @@ public static class OpenQasmGateDefinitionExpander
                 1);
         }
 
-        if (gateCall.Parameters.Count != 0)
+        if (gateCall.Parameters.Count != definition.Parameters.Count)
         {
             throw new OpenQasmParseException(
-                $"Gate '{definition.Name}' does not take parameters.",
+                $"Gate '{definition.Name}' expects {definition.Parameters.Count} parameter(s), " +
+                $"but received {gateCall.Parameters.Count}.",
                 1,
                 1);
         }
@@ -89,13 +82,19 @@ public static class OpenQasmGateDefinitionExpander
         for (int i = 0; i < definition.QubitParameters.Count; i++)
             qubitMap[definition.QubitParameters[i]] = gateCall.Qubits[i];
 
+        var parameterMap = new Dictionary<string, OpenQasmAngleExpression>();
+
+        for (int i = 0; i < definition.Parameters.Count; i++)
+            parameterMap[definition.Parameters[i]] = gateCall.Parameters[i];
+
         expansionStack.Push(definition.Name);
 
         var expanded = new List<OpenQasmGateCallStatement>();
 
         foreach (OpenQasmGateCallStatement bodyCall in definition.Body)
         {
-            OpenQasmGateCallStatement substituted = SubstituteQubits(bodyCall, qubitMap);
+            OpenQasmGateCallStatement substituted =
+                Substitute(bodyCall, qubitMap, parameterMap);
 
             IReadOnlyList<OpenQasmGateCallStatement> nested =
                 ExpandGateCall(substituted, definitions, expansionStack);
@@ -108,15 +107,17 @@ public static class OpenQasmGateDefinitionExpander
         return expanded;
     }
 
-    private static OpenQasmGateCallStatement SubstituteQubits(
+    private static OpenQasmGateCallStatement Substitute(
         OpenQasmGateCallStatement gateCall,
-        IReadOnlyDictionary<string, OpenQasmQubitOperand> qubitMap)
+        IReadOnlyDictionary<string, OpenQasmQubitOperand> qubitMap,
+        IReadOnlyDictionary<string, OpenQasmAngleExpression> parameterMap)
     {
         var substitutedQubits = new List<OpenQasmQubitOperand>();
 
         foreach (OpenQasmQubitOperand qubit in gateCall.Qubits)
         {
-            if (qubit.Index is null && qubitMap.TryGetValue(qubit.Name, out OpenQasmQubitOperand? replacement))
+            if (qubit.Index is null &&
+                qubitMap.TryGetValue(qubit.Name, out OpenQasmQubitOperand? replacement))
             {
                 substitutedQubits.Add(replacement);
                 continue;
@@ -125,9 +126,49 @@ public static class OpenQasmGateDefinitionExpander
             substitutedQubits.Add(qubit);
         }
 
+        var substitutedParameters = gateCall.Parameters
+            .Select(parameter => SubstituteAngle(parameter, parameterMap))
+            .ToArray();
+
         return gateCall with
         {
+            Parameters = substitutedParameters,
             Qubits = substitutedQubits
+        };
+    }
+
+    private static OpenQasmAngleExpression SubstituteAngle(
+        OpenQasmAngleExpression expression,
+        IReadOnlyDictionary<string, OpenQasmAngleExpression> parameterMap)
+    {
+        return expression switch
+        {
+            OpenQasmAngleConstant => expression,
+
+            OpenQasmAngleParameter parameter
+                when parameterMap.TryGetValue(parameter.Name, out OpenQasmAngleExpression? replacement)
+                => replacement,
+
+            OpenQasmAngleParameter
+                => expression,
+
+            OpenQasmAngleUnary unary
+                => unary with
+                {
+                    Operand = SubstituteAngle(unary.Operand, parameterMap)
+                },
+
+            OpenQasmAngleBinary binary
+                => binary with
+                {
+                    Left = SubstituteAngle(binary.Left, parameterMap),
+                    Right = SubstituteAngle(binary.Right, parameterMap)
+                },
+
+            _ => throw new OpenQasmParseException(
+                $"Unsupported angle expression '{expression.GetType().Name}'.",
+                1,
+                1)
         };
     }
 }

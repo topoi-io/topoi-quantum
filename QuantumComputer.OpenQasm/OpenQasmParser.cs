@@ -115,7 +115,7 @@ public sealed class OpenQasmParser
     {
         OpenQasmToken gate = Consume(OpenQasmTokenKind.Identifier, "Expected gate name.");
 
-        var parameters = new List<double>();
+        var parameters = new List<OpenQasmAngleExpression>();
 
         if (Match(OpenQasmTokenKind.OpenParen))
         {
@@ -165,82 +165,88 @@ public sealed class OpenQasmParser
         return value;
     }
 
-    private double ParseAngleExpression()
+    private OpenQasmAngleExpression ParseAngleExpression()
     {
-        // Supports:
-        // pi
-        // -pi
-        // pi/2
-        // -pi/2
-        // 3*pi/4
-        // 0.5*pi
-        // numeric literals
-        double value = ParseAngleTerm();
+        OpenQasmAngleExpression expression = ParseAngleTerm();
 
         while (Match(OpenQasmTokenKind.Plus) || Match(OpenQasmTokenKind.Minus))
         {
             OpenQasmToken op = Previous;
-            double rhs = ParseAngleTerm();
+            OpenQasmAngleExpression rhs = ParseAngleTerm();
 
-            value = op.Kind == OpenQasmTokenKind.Plus
-                ? value + rhs
-                : value - rhs;
+            expression = new OpenQasmAngleBinary(
+                expression,
+                op.Text,
+                rhs);
         }
 
-        return value;
+        return expression;
     }
 
-    private double ParseAngleTerm()
+    private OpenQasmAngleExpression ParseAngleTerm()
     {
-        double value = ParseAngleFactor();
+        OpenQasmAngleExpression expression = ParseAngleFactor();
 
         while (Match(OpenQasmTokenKind.Star) || Match(OpenQasmTokenKind.Slash))
         {
             OpenQasmToken op = Previous;
-            double rhs = ParseAngleFactor();
+            OpenQasmAngleExpression rhs = ParseAngleFactor();
 
-            if (op.Kind == OpenQasmTokenKind.Star)
-            {
-                value *= rhs;
-            }
-            else
-            {
-                if (rhs == 0.0)
-                    throw Error(op, "Division by zero in angle expression.");
-
-                value /= rhs;
-            }
+            expression = new OpenQasmAngleBinary(
+                expression,
+                op.Text,
+                rhs);
         }
 
-        return value;
+        return expression;
     }
 
-    private double ParseAngleFactor()
+    private OpenQasmAngleExpression ParseAngleFactor()
     {
         if (Match(OpenQasmTokenKind.Minus))
-            return -ParseAngleFactor();
+        {
+            return new OpenQasmAngleUnary(
+                "-",
+                ParseAngleFactor());
+        }
 
         if (Match(OpenQasmTokenKind.Plus))
-            return ParseAngleFactor();
+        {
+            return new OpenQasmAngleUnary(
+                "+",
+                ParseAngleFactor());
+        }
 
         if (Match(OpenQasmTokenKind.Pi))
-            return Math.PI;
+            return new OpenQasmAngleConstant(Math.PI);
+
+        if (Match(OpenQasmTokenKind.Identifier))
+        {
+            OpenQasmToken token = Previous;
+            return new OpenQasmAngleParameter(token.Text);
+        }
 
         if (Match(OpenQasmTokenKind.Integer) || Match(OpenQasmTokenKind.Number))
         {
             OpenQasmToken token = Previous;
 
-            if (!double.TryParse(token.Text, NumberStyles.Float, CultureInfo.InvariantCulture, out double value))
+            if (!double.TryParse(
+                    token.Text,
+                    NumberStyles.Float,
+                    CultureInfo.InvariantCulture,
+                    out double value))
+            {
                 throw Error(token, $"Invalid number literal '{token.Text}'.");
+            }
 
-            return value;
+            return new OpenQasmAngleConstant(value);
         }
 
         if (Match(OpenQasmTokenKind.OpenParen))
         {
-            double value = ParseAngleExpression();
+            OpenQasmAngleExpression expression = ParseAngleExpression();
             Consume(OpenQasmTokenKind.CloseParen, "Expected ')' after angle expression.");
-            return value;
+            return expression;
         }
 
         throw Error(Current, $"Expected angle expression but found '{Current.Text}'.");
