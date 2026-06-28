@@ -9,7 +9,8 @@ public sealed record OpenQasmQubitDeclaration(string Name, int Size) : OpenQasmS
 public sealed record OpenQasmGateCallStatement(
     string GateName,
     IReadOnlyList<OpenQasmAngleExpression> Parameters,
-    IReadOnlyList<OpenQasmQubitOperand> Qubits) : OpenQasmStatement;
+    IReadOnlyList<OpenQasmQubitOperand> Qubits,
+    IReadOnlyList<OpenQasmGateModifier> Modifiers) : OpenQasmStatement;
 
 public sealed record OpenQasmBitDeclaration(string Name, int Size) : OpenQasmStatement;
 

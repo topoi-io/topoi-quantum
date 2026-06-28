@@ -57,16 +57,14 @@ public sealed class OpenQasmParser
         if (Match(OpenQasmTokenKind.Qubit))
             return ParseQubitDeclaration();
 
-        if (Check(OpenQasmTokenKind.Identifier))
-            return ParseGateCall();
-
         if (Match(OpenQasmTokenKind.Bit))
             return ParseBitDeclaration();
 
         if (Match(OpenQasmTokenKind.Gate))
             return ParseGateDefinition();
 
-        if (Check(OpenQasmTokenKind.Identifier) && PeekKind(1) == OpenQasmTokenKind.OpenBracket)
+        if (Check(OpenQasmTokenKind.Identifier) &&
+            PeekKind(1) == OpenQasmTokenKind.OpenBracket)
         {
             // Could be c[0] = measure q[0];
             if (LooksLikeMeasurementAssignment())
@@ -81,6 +79,9 @@ public sealed class OpenQasmParser
 
         if (Match(OpenQasmTokenKind.Barrier))
             return ParseBarrierStatement();
+
+        if (StartsGateCall())
+            return ParseGateCall();
 
         throw Error(Current, $"Unsupported OpenQASM statement starting with '{Current.Text}'.");
     }
@@ -113,7 +114,11 @@ public sealed class OpenQasmParser
 
     private OpenQasmGateCallStatement ParseGateCall()
     {
-        OpenQasmToken gate = Consume(OpenQasmTokenKind.Identifier, "Expected gate name.");
+        List<OpenQasmGateModifier> modifiers = ParseGateModifiers();
+
+        OpenQasmToken gate = Consume(
+            OpenQasmTokenKind.Identifier,
+            "Expected gate name.");
 
         var parameters = new List<OpenQasmAngleExpression>();
 
@@ -141,7 +146,11 @@ public sealed class OpenQasmParser
 
         Consume(OpenQasmTokenKind.Semicolon, "Expected ';' after gate call.");
 
-        return new OpenQasmGateCallStatement(gate.Text, parameters, qubits);
+        return new OpenQasmGateCallStatement(
+            gate.Text,
+            parameters,
+            qubits,
+            modifiers);
     }
 
     private OpenQasmQubitReference ParseQubitReference()
@@ -433,7 +442,7 @@ public sealed class OpenQasmParser
             if (Check(OpenQasmTokenKind.EndOfFile))
                 throw Error(Current, "Unterminated gate definition body.");
 
-            if (!Check(OpenQasmTokenKind.Identifier))
+            if (!StartsGateCall())
                 throw Error(Current, "Only gate calls are currently supported inside gate definitions.");
 
             body.Add(ParseGateCall());
@@ -467,5 +476,54 @@ public sealed class OpenQasmParser
         }
 
         return new OpenQasmQubitOperand(name.Text, null);
+    }
+
+    private List<OpenQasmGateModifier> ParseGateModifiers()
+    {
+        var modifiers = new List<OpenQasmGateModifier>();
+
+        while (true)
+        {
+            if (Match(OpenQasmTokenKind.Ctrl))
+            {
+                Consume(OpenQasmTokenKind.At, "Expected '@' after 'ctrl'.");
+                modifiers.Add(new OpenQasmGateModifier(OpenQasmGateModifierKind.Ctrl));
+                continue;
+            }
+
+            if (Match(OpenQasmTokenKind.Inv))
+            {
+                Consume(OpenQasmTokenKind.At, "Expected '@' after 'inv'.");
+                modifiers.Add(new OpenQasmGateModifier(OpenQasmGateModifierKind.Inv));
+                continue;
+            }
+
+            if (Match(OpenQasmTokenKind.Pow))
+            {
+                Consume(OpenQasmTokenKind.OpenParen, "Expected '(' after 'pow'.");
+                OpenQasmAngleExpression argument = ParseAngleExpression();
+                Consume(OpenQasmTokenKind.CloseParen, "Expected ')' after pow argument.");
+                Consume(OpenQasmTokenKind.At, "Expected '@' after pow(...).");
+
+                modifiers.Add(new OpenQasmGateModifier(
+                    OpenQasmGateModifierKind.Pow,
+                    argument));
+
+                continue;
+            }
+
+            break;
+        }
+
+        return modifiers;
+    }
+
+    private bool StartsGateCall()
+    {
+        return Check(OpenQasmTokenKind.Identifier)
+               || Check(OpenQasmTokenKind.Ctrl)
+               || Check(OpenQasmTokenKind.Inv)
+               || Check(OpenQasmTokenKind.Pow)
+               || Check(OpenQasmTokenKind.NegCtrl);
     }
 }

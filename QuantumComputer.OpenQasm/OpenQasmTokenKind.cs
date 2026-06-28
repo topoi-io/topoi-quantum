@@ -33,5 +33,11 @@ public enum OpenQasmTokenKind
     Barrier,
     Arrow,
     Equals,
-    Gate
+    Gate,
+
+    At,
+    Ctrl,
+    Inv,
+    Pow,
+    NegCtrl
 }

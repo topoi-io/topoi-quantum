@@ -74,6 +74,7 @@ public sealed class OpenQasmLexer
             '=' => new OpenQasmToken(OpenQasmTokenKind.Equals, "=", line, column),
             '{' => new OpenQasmToken(OpenQasmTokenKind.OpenBrace, "{", line, column),
             '}' => new OpenQasmToken(OpenQasmTokenKind.CloseBrace, "}", line, column),
+            '@' => new OpenQasmToken(OpenQasmTokenKind.At, "@", line, column),
             _ => throw new OpenQasmParseException($"Unexpected character '{c}'", line, column)
         };
     }
@@ -100,6 +101,10 @@ public sealed class OpenQasmLexer
             "barrier" => OpenQasmTokenKind.Barrier,
             "gate" => OpenQasmTokenKind.Gate,
             "pi" => OpenQasmTokenKind.Pi,
+            "ctrl" => OpenQasmTokenKind.Ctrl,
+            "inv" => OpenQasmTokenKind.Inv,
+            "pow" => OpenQasmTokenKind.Pow,
+            "negctrl" => OpenQasmTokenKind.NegCtrl,
             _ => OpenQasmTokenKind.Identifier
         };
 
