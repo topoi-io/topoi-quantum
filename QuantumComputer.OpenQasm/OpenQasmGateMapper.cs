@@ -44,8 +44,8 @@ internal static class OpenQasmGateMapper
 
             _ => throw new OpenQasmParseException(
                 $"Unsupported OpenQASM gate '{gateCall.GateName}'.",
-                1,
-                1)
+                gateCall.Line,
+                gateCall.Column)
         };
     }
 
@@ -56,10 +56,10 @@ internal static class OpenQasmGateMapper
         int expectedQubits)
     {
         if (gateCall.Parameters.Count != 0)
-            throw new OpenQasmParseException($"Gate '{gateCall.GateName}' does not take parameters.", 1, 1);
+            throw new OpenQasmParseException($"Gate '{gateCall.GateName}' does not take parameters.", gateCall.Line, gateCall.Column);
 
         if (qubits.Length != expectedQubits)
-            throw new OpenQasmParseException($"Gate '{gateCall.GateName}' expects {expectedQubits} qubit(s).", 1, 1);
+            throw new OpenQasmParseException($"Gate '{gateCall.GateName}' expects {expectedQubits} qubit(s).", gateCall.Line, gateCall.Column);
 
         return new GateOperation(kind, qubits);
     }
@@ -71,10 +71,10 @@ internal static class OpenQasmGateMapper
         int expectedQubits)
     {
         if (gateCall.Parameters.Count != 1)
-            throw new OpenQasmParseException($"Gate '{gateCall.GateName}' expects one parameter.", 1, 1);
+            throw new OpenQasmParseException($"Gate '{gateCall.GateName}' expects one parameter.", gateCall.Line,  gateCall.Column);
 
         if (qubits.Length != expectedQubits)
-            throw new OpenQasmParseException($"Gate '{gateCall.GateName}' expects {expectedQubits} qubit(s).", 1, 1);
+            throw new OpenQasmParseException($"Gate '{gateCall.GateName}' expects {expectedQubits} qubit(s).", gateCall.Line, gateCall.Column);
 
         double angle = gateCall.Parameters[0].Evaluate(new Dictionary<string, double>());
 
@@ -87,8 +87,8 @@ internal static class OpenQasmGateMapper
         {
             throw new OpenQasmParseException(
                 "Only one gate modifier is currently supported.",
-                1,
-                1);
+                gateCall.Line,
+                gateCall.Column);
         }
 
         OpenQasmGateModifier modifier = gateCall.Modifiers[0];
@@ -100,8 +100,8 @@ internal static class OpenQasmGateMapper
 
             _ => throw new OpenQasmParseException(
                 $"Unsupported gate modifier '{modifier.Kind}'.",
-                1,
-                1)
+                gateCall.Line,
+                gateCall.Column)
         };
     }
 
@@ -122,8 +122,8 @@ internal static class OpenQasmGateMapper
 
             _ => throw new OpenQasmParseException(
                 $"Unsupported controlled gate 'ctrl @ {gateCall.GateName}'.",
-                1,
-                1)
+                gateCall.Line,
+                gateCall.Column)
         };
     }
 
@@ -153,8 +153,8 @@ internal static class OpenQasmGateMapper
 
             _ => throw new OpenQasmParseException(
                 $"Unsupported inverse gate 'inv @ {gateCall.GateName}'.",
-                1,
-                1)
+                gateCall.Line,
+                gateCall.Column)
         };
     }
 
@@ -165,10 +165,10 @@ internal static class OpenQasmGateMapper
         int expectedQubits)
     {
         if (gateCall.Parameters.Count != 1)
-            throw new OpenQasmParseException($"Gate '{gateCall.GateName}' expects one parameter.", 1, 1);
+            throw new OpenQasmParseException($"Gate '{gateCall.GateName}' expects one parameter.", gateCall.Line, gateCall.Column);
 
         if (qubits.Length != expectedQubits)
-            throw new OpenQasmParseException($"Gate '{gateCall.GateName}' expects {expectedQubits} qubit(s).", 1, 1);
+            throw new OpenQasmParseException($"Gate '{gateCall.GateName}' expects {expectedQubits} qubit(s).", gateCall.Line, gateCall.Column);
 
         double angle = gateCall.Parameters[0].Evaluate(new Dictionary<string, double>());
 

@@ -1,17 +1,23 @@
 ﻿namespace QuantumComputer.OpenQasm;
 
-public abstract record OpenQasmAngleExpression
+public abstract record OpenQasmAngleExpression(int Line, int Column)
 {
     public abstract double Evaluate(IReadOnlyDictionary<string, double> parameters);
 }
 
-public sealed record OpenQasmAngleConstant(double Value) : OpenQasmAngleExpression
+public sealed record OpenQasmAngleConstant(
+    double Value,
+    int Line,
+    int Column) : OpenQasmAngleExpression(Line, Column)
 {
     public override double Evaluate(IReadOnlyDictionary<string, double> parameters)
         => Value;
 }
 
-public sealed record OpenQasmAngleParameter(string Name) : OpenQasmAngleExpression
+public sealed record OpenQasmAngleParameter(
+    string Name,
+    int Line,
+    int Column) : OpenQasmAngleExpression(Line, Column)
 {
     public override double Evaluate(IReadOnlyDictionary<string, double> parameters)
     {
@@ -19,8 +25,8 @@ public sealed record OpenQasmAngleParameter(string Name) : OpenQasmAngleExpressi
         {
             throw new OpenQasmParseException(
                 $"Unknown angle parameter '{Name}'.",
-                1,
-                1);
+                Line,
+                Column);
         }
 
         return value;
@@ -29,7 +35,9 @@ public sealed record OpenQasmAngleParameter(string Name) : OpenQasmAngleExpressi
 
 public sealed record OpenQasmAngleUnary(
     string Operator,
-    OpenQasmAngleExpression Operand) : OpenQasmAngleExpression
+    OpenQasmAngleExpression Operand,
+    int Line,
+    int Column) : OpenQasmAngleExpression(Line, Column)
 {
     public override double Evaluate(IReadOnlyDictionary<string, double> parameters)
     {
@@ -41,8 +49,8 @@ public sealed record OpenQasmAngleUnary(
             "-" => -value,
             _ => throw new OpenQasmParseException(
                 $"Unsupported unary angle operator '{Operator}'.",
-                1,
-                1)
+                Line,
+                Column)
         };
     }
 }
@@ -50,7 +58,9 @@ public sealed record OpenQasmAngleUnary(
 public sealed record OpenQasmAngleBinary(
     OpenQasmAngleExpression Left,
     string Operator,
-    OpenQasmAngleExpression Right) : OpenQasmAngleExpression
+    OpenQasmAngleExpression Right,
+    int Line,
+    int Column) : OpenQasmAngleExpression(Line, Column)
 {
     public override double Evaluate(IReadOnlyDictionary<string, double> parameters)
     {
@@ -62,18 +72,16 @@ public sealed record OpenQasmAngleBinary(
             "+" => left + right,
             "-" => left - right,
             "*" => left * right,
-
             "/" when right != 0.0 => left / right,
-
             "/" => throw new OpenQasmParseException(
                 "Division by zero in angle expression.",
-                1,
-                1),
+                Line,
+                Column),
 
             _ => throw new OpenQasmParseException(
                 $"Unsupported binary angle operator '{Operator}'.",
-                1,
-                1)
+                Line,
+                Column)
         };
     }
 }

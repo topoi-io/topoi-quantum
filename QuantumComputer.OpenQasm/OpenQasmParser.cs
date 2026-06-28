@@ -63,22 +63,29 @@ public sealed class OpenQasmParser
         if (Match(OpenQasmTokenKind.Gate))
             return ParseGateDefinition();
 
-        if (Check(OpenQasmTokenKind.Identifier) &&
-            PeekKind(1) == OpenQasmTokenKind.OpenBracket)
+        if (Check(OpenQasmTokenKind.Identifier) && PeekKind(1) == OpenQasmTokenKind.OpenBracket)
         {
-            // Could be c[0] = measure q[0];
             if (LooksLikeMeasurementAssignment())
                 return ParseMeasurementAssignment();
         }
 
+        if (Check(OpenQasmTokenKind.Identifier) ||
+            Check(OpenQasmTokenKind.Ctrl) ||
+            Check(OpenQasmTokenKind.Inv) ||
+            Check(OpenQasmTokenKind.Pow) ||
+            Check(OpenQasmTokenKind.NegCtrl))
+        {
+            return ParseGateCall();
+        }
+
         if (Match(OpenQasmTokenKind.Measure))
-            return ParseLegacyMeasurement();
+            return ParseLegacyMeasurement(Previous);
 
         if (Match(OpenQasmTokenKind.Reset))
-            return ParseResetStatement();
+            return ParseResetStatement(Previous);
 
         if (Match(OpenQasmTokenKind.Barrier))
-            return ParseBarrierStatement();
+            return ParseBarrierStatement(Previous);
 
         if (StartsGateCall())
             return ParseGateCall();
@@ -109,7 +116,11 @@ public sealed class OpenQasmParser
         if (size <= 0)
             throw Error(name, "Qubit register size must be positive.");
 
-        return new OpenQasmQubitDeclaration(name.Text, size);
+        return new OpenQasmQubitDeclaration(
+                    name.Text,
+                    size,
+                    name.Line,
+                    name.Column);
     }
 
     private OpenQasmGateCallStatement ParseGateCall()
@@ -147,10 +158,12 @@ public sealed class OpenQasmParser
         Consume(OpenQasmTokenKind.Semicolon, "Expected ';' after gate call.");
 
         return new OpenQasmGateCallStatement(
-            gate.Text,
-            parameters,
-            qubits,
-            modifiers);
+                        gate.Text,
+                        parameters,
+                        qubits,
+                        modifiers,
+                        gate.Line,
+                        gate.Column);
     }
 
     private OpenQasmQubitReference ParseQubitReference()
@@ -184,9 +197,11 @@ public sealed class OpenQasmParser
             OpenQasmAngleExpression rhs = ParseAngleTerm();
 
             expression = new OpenQasmAngleBinary(
-                expression,
-                op.Text,
-                rhs);
+                        expression,
+                        op.Text,
+                        rhs,
+                        op.Line,
+                        op.Column);
         }
 
         return expression;
@@ -202,9 +217,11 @@ public sealed class OpenQasmParser
             OpenQasmAngleExpression rhs = ParseAngleFactor();
 
             expression = new OpenQasmAngleBinary(
-                expression,
-                op.Text,
-                rhs);
+                            expression,
+                            op.Text,
+                            rhs,
+                            op.Line,
+                            op.Column);
         }
 
         return expression;
@@ -214,25 +231,36 @@ public sealed class OpenQasmParser
     {
         if (Match(OpenQasmTokenKind.Minus))
         {
+            OpenQasmToken op = Previous;
+
             return new OpenQasmAngleUnary(
                 "-",
-                ParseAngleFactor());
+                ParseAngleFactor(),
+                op.Line,
+                op.Column);
         }
 
         if (Match(OpenQasmTokenKind.Plus))
         {
+            OpenQasmToken op = Previous;
+
             return new OpenQasmAngleUnary(
                 "+",
-                ParseAngleFactor());
+                ParseAngleFactor(),
+                op.Line,
+                op.Column);
         }
 
         if (Match(OpenQasmTokenKind.Pi))
-            return new OpenQasmAngleConstant(Math.PI);
+        {
+            OpenQasmToken token = Previous;
+            return new OpenQasmAngleConstant(Math.PI, token.Line, token.Column);
+        }
 
         if (Match(OpenQasmTokenKind.Identifier))
         {
             OpenQasmToken token = Previous;
-            return new OpenQasmAngleParameter(token.Text);
+            return new OpenQasmAngleParameter(token.Text, token.Line, token.Column);
         }
 
         if (Match(OpenQasmTokenKind.Integer) || Match(OpenQasmTokenKind.Number))
@@ -248,7 +276,7 @@ public sealed class OpenQasmParser
                 throw Error(token, $"Invalid number literal '{token.Text}'.");
             }
 
-            return new OpenQasmAngleConstant(value);
+            return new OpenQasmAngleConstant(value, token.Line, token.Column);
         }
 
         if (Match(OpenQasmTokenKind.OpenParen))
@@ -320,7 +348,11 @@ public sealed class OpenQasmParser
         if (size <= 0)
             throw Error(name, "Bit register size must be positive.");
 
-        return new OpenQasmBitDeclaration(name.Text, size);
+        return new OpenQasmBitDeclaration(
+                    name.Text,
+                    size,
+                    name.Line,
+                    name.Column);
     }
 
     private bool LooksLikeMeasurementAssignment()
@@ -341,16 +373,20 @@ public sealed class OpenQasmParser
         OpenQasmBitReference bit = ParseBitReference();
 
         Consume(OpenQasmTokenKind.Equals, "Expected '=' in measurement assignment.");
-        Consume(OpenQasmTokenKind.Measure, "Expected 'measure' in measurement assignment.");
+        OpenQasmToken measureToken = Consume(OpenQasmTokenKind.Measure, "Expected 'measure' in measurement assignment.");
 
         OpenQasmQubitReference qubit = ParseQubitReference();
 
         Consume(OpenQasmTokenKind.Semicolon, "Expected ';' after measurement.");
 
-        return new OpenQasmMeasureStatement(qubit, bit);
+        return new OpenQasmMeasureStatement(
+            qubit,
+            bit,
+            measureToken.Line,
+            measureToken.Column);
     }
 
-    private OpenQasmMeasureStatement ParseLegacyMeasurement()
+    private OpenQasmMeasureStatement ParseLegacyMeasurement(OpenQasmToken measureToken)
     {
         OpenQasmQubitReference qubit = ParseQubitReference();
 
@@ -360,7 +396,11 @@ public sealed class OpenQasmParser
 
         Consume(OpenQasmTokenKind.Semicolon, "Expected ';' after measurement.");
 
-        return new OpenQasmMeasureStatement(qubit, bit);
+        return new OpenQasmMeasureStatement(
+            qubit,
+            bit,
+            measureToken.Line,
+            measureToken.Column);
     }
 
     private OpenQasmBitReference ParseBitReference()
@@ -372,29 +412,6 @@ public sealed class OpenQasmParser
         Consume(OpenQasmTokenKind.CloseBracket, "Expected ']' after bit index.");
 
         return new OpenQasmBitReference(name.Text, index);
-    }
-
-    private OpenQasmResetStatement ParseResetStatement()
-    {
-        OpenQasmQubitReference qubit = ParseQubitReference();
-        Consume(OpenQasmTokenKind.Semicolon, "Expected ';' after reset statement.");
-
-        return new OpenQasmResetStatement(qubit);
-    }
-
-    private OpenQasmBarrierStatement ParseBarrierStatement()
-    {
-        var qubits = new List<OpenQasmQubitReference>();
-
-        do
-        {
-            qubits.Add(ParseQubitReference());
-        }
-        while (Match(OpenQasmTokenKind.Comma));
-
-        Consume(OpenQasmTokenKind.Semicolon, "Expected ';' after barrier statement.");
-
-        return new OpenQasmBarrierStatement(qubits);
     }
 
     private OpenQasmGateDefinitionStatement ParseGateDefinition()
@@ -457,10 +474,12 @@ public sealed class OpenQasmParser
             throw Error(name, $"Gate '{name.Text}' contains duplicate angle parameter names.");
 
         return new OpenQasmGateDefinitionStatement(
-            name.Text,
-            parameters,
-            qubitParameters,
-            body);
+                    name.Text,
+                    parameters,
+                    qubitParameters,
+                    body,
+                    name.Line,
+                    name.Column);
     }
 
     private OpenQasmQubitOperand ParseQubitOperand()
@@ -525,5 +544,34 @@ public sealed class OpenQasmParser
                || Check(OpenQasmTokenKind.Inv)
                || Check(OpenQasmTokenKind.Pow)
                || Check(OpenQasmTokenKind.NegCtrl);
+    }
+
+    private OpenQasmResetStatement ParseResetStatement(OpenQasmToken resetToken)
+    {
+        OpenQasmQubitReference qubit = ParseQubitReference();
+        Consume(OpenQasmTokenKind.Semicolon, "Expected ';' after reset statement.");
+
+        return new OpenQasmResetStatement(
+            qubit,
+            resetToken.Line,
+            resetToken.Column);
+    }
+
+    private OpenQasmBarrierStatement ParseBarrierStatement(OpenQasmToken barrierToken)
+    {
+        var qubits = new List<OpenQasmQubitReference>();
+
+        do
+        {
+            qubits.Add(ParseQubitReference());
+        }
+        while (Match(OpenQasmTokenKind.Comma));
+
+        Consume(OpenQasmTokenKind.Semicolon, "Expected ';' after barrier statement.");
+
+        return new OpenQasmBarrierStatement(
+            qubits,
+            barrierToken.Line,
+            barrierToken.Column);
     }
 }

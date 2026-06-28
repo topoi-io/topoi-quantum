@@ -271,4 +271,24 @@ public sealed class OpenQasmGateDefinitionTests
         Assert.Throws<OpenQasmParseException>(() =>
             OpenQasmCircuitLoader.LoadFromString(source));
     }
+
+    [Test]
+    public void LoadFromString_TopLevelUnknownAngleSymbol_ReportsSourceLocation()
+    {
+        const string source = """
+        OPENQASM 3.1;
+        include "stdgates.inc";
+
+        qubit[1] q;
+
+        rz(theta) q[0];
+        """;
+
+        OpenQasmParseException ex = Assert.Throws<OpenQasmParseException>(() =>
+            OpenQasmCircuitLoader.LoadFromString(source))!;
+
+        Assert.That(ex.Message, Does.Contain("theta"));
+        Assert.That(ex.Line, Is.GreaterThan(1));
+        Assert.That(ex.Column, Is.GreaterThan(1));
+    }
 }

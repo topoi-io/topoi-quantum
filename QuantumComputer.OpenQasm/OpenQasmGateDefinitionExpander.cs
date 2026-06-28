@@ -18,8 +18,8 @@ public static class OpenQasmGateDefinitionExpander
                 {
                     throw new OpenQasmParseException(
                         $"Duplicate gate definition '{definition.Name}'.",
-                        1,
-                        1);
+                        definition.Line,
+                        definition.Column);
                 }
 
                 definitions[definition.Name] = definition;
@@ -55,8 +55,8 @@ public static class OpenQasmGateDefinitionExpander
 
             throw new OpenQasmParseException(
                 $"Recursive gate definition detected: {path}.",
-                1,
-                1);
+                gateCall.Line,
+                gateCall.Column);
         }
 
         if (gateCall.Parameters.Count != definition.Parameters.Count)
@@ -64,8 +64,8 @@ public static class OpenQasmGateDefinitionExpander
             throw new OpenQasmParseException(
                 $"Gate '{definition.Name}' expects {definition.Parameters.Count} parameter(s), " +
                 $"but received {gateCall.Parameters.Count}.",
-                1,
-                1);
+                gateCall.Line,
+                gateCall.Column);
         }
 
         if (gateCall.Qubits.Count != definition.QubitParameters.Count)
@@ -73,8 +73,8 @@ public static class OpenQasmGateDefinitionExpander
             throw new OpenQasmParseException(
                 $"Gate '{definition.Name}' expects {definition.QubitParameters.Count} qubit argument(s), " +
                 $"but received {gateCall.Qubits.Count}.",
-                1,
-                1);
+                gateCall.Line,
+                gateCall.Column);
         }
 
         var qubitMap = new Dictionary<string, OpenQasmQubitOperand>();
@@ -167,8 +167,8 @@ public static class OpenQasmGateDefinitionExpander
 
             _ => throw new OpenQasmParseException(
                 $"Unsupported angle expression '{expression.GetType().Name}'.",
-                1,
-                1)
+                expression.Line,
+                expression.Column)
         };
     }
 }
