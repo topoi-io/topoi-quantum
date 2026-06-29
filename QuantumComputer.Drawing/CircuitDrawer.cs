@@ -50,8 +50,13 @@ public static class CircuitDrawer
 
         var sb = new StringBuilder();
 
-        foreach (string row in rows)
+        foreach (string? row in rows)
+        {
+            if (row is null)
+                throw new InvalidOperationException("Circuit drawing row was not initialized.");
+
             sb.AppendLine(row.TrimEnd());
+        }
 
         return sb.ToString();
     }
