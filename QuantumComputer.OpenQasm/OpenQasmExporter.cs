@@ -27,6 +27,31 @@ public static class OpenQasmExporter
         return sb.ToString();
     }
 
+    public static string Export(OpenQasmExecutableProgram program)
+    {
+        if (program is null)
+            throw new ArgumentNullException(nameof(program));
+
+        var sb = new StringBuilder();
+
+        sb.AppendLine("OPENQASM 3.1;");
+        sb.AppendLine("include \"stdgates.inc\";");
+        sb.AppendLine();
+
+        AppendQubitRegisters(sb, program);
+        AppendBitRegisters(sb, program);
+
+        if (program.QubitRegisters.Count > 0 || program.BitRegisters.Count > 0)
+            sb.AppendLine();
+
+        foreach (OpenQasmExecutableOperation operation in program.Operations)
+        {
+            sb.AppendLine(FormatExecutableOperation(operation));
+        }
+
+        return sb.ToString();
+    }
+
     private static string FormatOperation(GateOperation operation)
     {
         return operation.Kind switch
@@ -70,5 +95,42 @@ public static class OpenQasmExporter
             throw new InvalidOperationException($"Gate {operation.Kind} requires an angle.");
 
         return operation.Angle.Value.ToString("R", CultureInfo.InvariantCulture);
+    }
+
+    private static void AppendQubitRegisters(StringBuilder sb, OpenQasmExecutableProgram program)
+    {
+        foreach (var register in program.QubitRegisters.OrderBy(r => r.Value.Offset))
+        {
+            sb.AppendLine($"qubit[{register.Value.Size}] {register.Key};");
+        }
+    }
+
+    private static void AppendBitRegisters(StringBuilder sb, OpenQasmExecutableProgram program)
+    {
+        foreach (var register in program.BitRegisters.OrderBy(r => r.Value.Offset))
+        {
+            sb.AppendLine($"bit[{register.Value.Size}] {register.Key};");
+        }
+    }
+
+    private static string FormatExecutableOperation(OpenQasmExecutableOperation operation)
+    {
+        return operation switch
+        {
+            OpenQasmGateOperation gate =>
+                FormatOperation(gate.Operation),
+
+            OpenQasmMeasureOperation measure =>
+                $"c[{measure.Bit}] = measure q[{measure.Qubit}];",
+
+            OpenQasmResetOperation reset =>
+                $"reset q[{reset.Qubit}];",
+
+            OpenQasmBarrierOperation barrier =>
+                $"barrier {string.Join(", ", barrier.Qubits.Select(q => $"q[{q}]"))};",
+
+            _ => throw new NotSupportedException(
+                $"Cannot export OpenQASM operation {operation.GetType().Name}.")
+        };
     }
 }
