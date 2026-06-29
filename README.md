@@ -1,33 +1,62 @@
-# Quantum Computer Simulator for .NET
+# Quantum Computer Lab for .NET
 
-**A C# / .NET 10 dense state-vector quantum circuit simulator for teaching, computer labs, OpenQASM experiments, and quantum-computing coursework.**
+**A professional C# / .NET 10 quantum computer laboratory toolkit for state-vector simulation, circuit experimentation, OpenQASM workflows, sampling, expectation estimation, and quantum-computing education.**
 
-This repository provides a clear, test-driven quantum simulator written in C#. It is designed to help students and developers learn how quantum states, gates, circuits, measurement, entanglement, sampling, Pauli expectation values, and OpenQASM programs work internally.
+This repository provides a complete local **Quantum Computer Lab** environment for learning, experimenting, teaching, and prototyping quantum circuits in C#.
 
-The project is suitable for:
+It combines:
 
-- university computer-lab exercises
-- quantum-computing teaching demonstrations
-- C#/.NET educational projects
-- OpenQASM 3.x parsing and execution experiments
-- learning dense state-vector simulation
-- test-driven numerical software examples
+- a dense state-vector quantum simulator
+- a fluent circuit builder
+- SDK-level `Sampler` and `Estimator` primitives
+- OpenQASM 3.x import/export support
+- custom OpenQASM gate expansion
+- circuit drawing
+- command-line execution
+- interactive REPL usage
+- repeatable testing with seeded randomness
+- NUnit regression coverage
 
-It is intentionally focused on **clarity, correctness, inspectability, and educational value** rather than competing with high-performance production simulators.
+The project is designed for users who want to understand how quantum computation works at the circuit, state-vector, measurement, and observable level while staying inside a professional .NET development workflow.
+
+---
+
+## Intended Use
+
+This project is suitable for:
+
+- Quantum Computer Lab exercises
+- university quantum-computing modules
+- C# and .NET quantum software teaching
+- OpenQASM experimentation
+- local simulation of small-to-medium quantum circuits
+- algorithm prototyping before using cloud quantum services
+- teaching Bell states, GHZ states, measurement, sampling, and Pauli observables
+- demonstrating how simulator internals work
+- test-driven quantum software development
+
+It is intentionally focused on **clarity, correctness, educational value, professional API design, and inspectable simulator architecture**.
+
+It is not intended to replace high-performance production simulators, tensor-network simulators, or real quantum hardware backends.
 
 ---
 
 ## Contents
 
-- [Key Features](#key-features)
+- [Highlights](#highlights)
 - [Learning Outcomes](#learning-outcomes)
 - [Requirements](#requirements)
 - [Quick Start](#quick-start)
-- [Command-Line Usage](#command-line-usage)
+- [SDK Quick Start](#sdk-quick-start)
+- [Sampler Primitive](#sampler-primitive)
+- [Estimator Primitive](#estimator-primitive)
+- [Fluent Circuit Builder](#fluent-circuit-builder)
+- [Command-Line Quantum Lab](#command-line-quantum-lab)
 - [Interactive REPL](#interactive-repl)
-- [OpenQASM Support](#openqasm-support)
-- [Using the Simulator as a Library](#using-the-simulator-as-a-library)
-- [Recommended Computer Lab Structure](#recommended-computer-lab-structure)
+- [OpenQASM Laboratory Workflows](#openqasm-laboratory-workflows)
+- [Custom OpenQASM Gates](#custom-openqasm-gates)
+- [OpenQASM Gate Modifiers](#openqasm-gate-modifiers)
+- [Recommended Quantum Computer Lab Exercises](#recommended-quantum-computer-lab-exercises)
 - [Project Structure](#project-structure)
 - [Architecture](#architecture)
 - [Testing](#testing)
@@ -36,17 +65,32 @@ It is intentionally focused on **clarity, correctness, inspectability, and educa
 - [Memory Model](#memory-model)
 - [Limitations](#limitations)
 - [Roadmap](#roadmap)
+- [Contributing](#contributing)
 - [License](#license)
 
 ---
 
-## Key Features
+## Highlights
+
+### Professional .NET quantum lab API
+
+- `QuantumCircuit`
+- `QuantumCircuitBuilder`
+- `QuantumToolkit`
+- `Sampler`
+- `SamplerResult`
+- `Estimator`
+- `EstimatorResult`
+- `QuantumSimulator`
+- `PauliTerm`
+- `GateOperation`
 
 ### Quantum simulation
 
-- Dense state-vector simulation for N-qubit pure states
-- Instance-based `QuantumSimulator`
-- Static `Quantum` facade for simple interactive usage
+- N-qubit dense state-vector simulation
+- Pure-state simulation using complex amplitudes
+- Instance-based simulator model
+- Static `Quantum` facade for interactive experiments
 - Full-register measurement with state collapse
 - Single-qubit measurement with partial collapse
 - Repeated sampling
@@ -55,8 +99,8 @@ It is intentionally focused on **clarity, correctness, inspectability, and educa
 - State norm diagnostics
 - Manual normalization
 - Snapshot and restore support
-- Seeded randomness for deterministic tests
 - Cryptographically strong randomness by default
+- Seeded randomness for repeatable lab runs and tests
 
 ### Supported gates
 
@@ -81,53 +125,44 @@ Controlled and multi-qubit gates:
 - `CCX` / Toffoli
 - `CRX`, `CRY`, `CRZ`
 
-### Circuit and tooling support
-
-- `QuantumCircuit` model
-- Gate-only native `.qc` circuit loading
-- Unicode circuit drawing
-- CLI execution
-- Interactive REPL
-- Script execution
-- NUnit regression tests
-
 ### OpenQASM support
 
-- OpenQASM 3, 3.0, and 3.1 version declarations
+- OpenQASM 3.x version declarations
 - `include "stdgates.inc";`
 - `qubit[n] q;`
 - `bit[n] c;`
 - standard gate calls
-- parameterized standard gates
+- parameterized gate calls
+- OpenQASM angle expressions using `pi`, arithmetic, parentheses, and custom-gate parameters
 - measurement into classical bits
 - legacy measurement syntax
 - reset
 - barrier as a no-op marker
-- OpenQASM export from circuits / executable models where supported
-- non-parameterized custom gate definitions
+- custom gate definitions
 - parameterized custom gate definitions
-- custom gate parameter substitution
 - nested custom gate expansion
-- recursive gate detection
-- OpenQASM angle expressions using `pi`, arithmetic, parentheses, and gate parameters
-- gate modifiers such as `ctrl @` and `inv @` where implemented
+- recursive custom gate detection
+- gate modifiers such as `ctrl @` and `inv @` where supported
+- OpenQASM export from supported circuit/executable models
 
 ---
 
 ## Learning Outcomes
 
-A student using this project should be able to:
+A user working through this Quantum Computer Lab should be able to:
 
-1. Explain how an N-qubit pure quantum state is represented as `2^n` complex amplitudes.
-2. Apply single-qubit and controlled gates to a state vector.
-3. Prepare Bell and GHZ states.
-4. Understand measurement collapse and repeated sampling.
-5. Compute Pauli expectation values such as `Z0`, `ZZ 0 1`, and `XX 0 1`.
-6. Understand the memory limits of dense state-vector simulation.
-7. Load and execute OpenQASM circuits.
-8. Write custom OpenQASM gates, including parameterized custom gates.
-9. Compare native circuit definitions with OpenQASM circuits.
-10. Read and extend a clean, test-driven C# simulator architecture.
+1. Represent an N-qubit quantum state as `2^n` complex amplitudes.
+2. Apply single-qubit gates and controlled gates to a dense state vector.
+3. Construct Bell states and GHZ states.
+4. Explain measurement collapse and repeated sampling.
+5. Use a `Sampler` primitive to estimate measurement distributions.
+6. Use an `Estimator` primitive to compute Pauli expectation values.
+7. Understand the relationship between amplitudes, probabilities, and observables.
+8. Write and execute OpenQASM circuits.
+9. Define custom OpenQASM gates, including parameterized custom gates.
+10. Use `ctrl @` and `inv @` OpenQASM-style gate modifier workflows where supported.
+11. Understand the exponential memory cost of dense state-vector simulation.
+12. Extend a clean, test-driven C# quantum software architecture.
 
 ---
 
@@ -135,10 +170,10 @@ A student using this project should be able to:
 
 - .NET 10 SDK
 - Windows, macOS, or Linux
-- A terminal or command prompt
-- Optional: Visual Studio 2026, Visual Studio Code, or JetBrains Rider
+- Terminal, PowerShell, Command Prompt, or shell
+- Optional: Visual Studio, Visual Studio Code, or JetBrains Rider
 
-Check your installed .NET version:
+Check your installed SDK:
 
 ```bash
 dotnet --version
@@ -161,36 +196,207 @@ Build the solution:
 dotnet build
 ```
 
-Run the test suite:
+Run all tests:
 
 ```bash
 dotnet test
 ```
 
-Run the interactive simulator:
+Run the command-line Quantum Computer Lab:
 
 ```bash
 dotnet run --project QuantumComputer
 ```
 
-Run an OpenQASM Bell-state example:
+Run an OpenQASM Bell-state experiment:
 
 ```bash
 dotnet run --project QuantumComputer -- --qasm examples/bell.qasm --draw --print --expect "ZZ 0 1"
 ```
 
-Expected output includes a Bell circuit and probabilities close to:
+Expected Bell-state behaviour:
 
 ```text
-|00>  P = 0.500000
-|11>  P = 0.500000
+|00>  P ≈ 0.5
+|11>  P ≈ 0.5
+<Z0 ⊗ Z1> ≈ +1
 ```
 
 ---
 
-## Command-Line Usage
+## SDK Quick Start
 
-The simulator can run directly from the command line without entering the REPL.
+The SDK layer provides a professional way to build circuits, sample outcomes, and estimate observables from C#.
+
+```csharp
+using QuantumComputer.Core;
+using QuantumComputer.Core.Primitives;
+
+QuantumCircuit circuit = QuantumToolkit
+    .Circuit(2)
+    .H(0)
+    .CX(0, 1)
+    .Build();
+
+SamplerResult samples = QuantumToolkit.Sampler.Run(circuit, shots: 1000);
+
+Console.WriteLine($"00 count = {samples.CountFor("00")}");
+Console.WriteLine($"11 count = {samples.CountFor("11")}");
+
+EstimatorResult estimate = QuantumToolkit.Estimator.Estimate(
+    circuit,
+    new[]
+    {
+        new PauliTerm('Z', 0),
+        new PauliTerm('Z', 1)
+    });
+
+Console.WriteLine($"<ZZ> = {estimate.Value}");
+```
+
+This is the recommended entry point for professional Quantum Computer Lab exercises.
+
+---
+
+## Sampler Primitive
+
+The `Sampler` primitive executes a circuit many times and returns measurement counts and probabilities.
+
+It is useful for laboratory work involving:
+
+- Bell-state sampling
+- GHZ-state sampling
+- comparing theoretical probabilities with measured frequencies
+- demonstrating quantum randomness
+- deterministic seeded simulations for tests and coursework
+
+Example:
+
+```csharp
+using QuantumComputer.Core;
+using QuantumComputer.Core.Primitives;
+
+QuantumCircuit circuit = QuantumToolkit
+    .Circuit(1)
+    .H(0)
+    .Build();
+
+var sampler = new Sampler(new SeededRandomSource(123));
+
+SamplerResult result = sampler.Run(circuit, shots: 1000);
+
+Console.WriteLine(result.CountFor("0"));
+Console.WriteLine(result.CountFor("1"));
+Console.WriteLine(result.ProbabilityFor("0"));
+Console.WriteLine(result.ProbabilityFor("1"));
+```
+
+`SamplerResult` contains:
+
+- `QubitCount`
+- `Shots`
+- `Counts`
+- `Probabilities`
+- `CountFor(bitString)`
+- `ProbabilityFor(bitString)`
+
+---
+
+## Estimator Primitive
+
+The `Estimator` primitive computes expectation values for Pauli observables.
+
+It is useful for:
+
+- quantum algorithm analysis
+- Bell-state correlation experiments
+- GHZ-state correlation experiments
+- validating simulator behaviour against known analytic results
+- introducing observables and expectation values
+
+Example:
+
+```csharp
+using QuantumComputer.Core;
+using QuantumComputer.Core.Primitives;
+
+QuantumCircuit circuit = QuantumToolkit
+    .Circuit(2)
+    .H(0)
+    .CX(0, 1)
+    .Build();
+
+var estimator = new Estimator();
+
+EstimatorResult result = estimator.Estimate(
+    circuit,
+    new[]
+    {
+        new PauliTerm('Z', 0),
+        new PauliTerm('Z', 1)
+    });
+
+Console.WriteLine(result.Value); // approximately +1
+```
+
+`EstimatorResult` contains:
+
+- `QubitCount`
+- `Observable`
+- `Value`
+
+---
+
+## Fluent Circuit Builder
+
+`QuantumCircuitBuilder` provides a clean fluent API for constructing circuits.
+
+```csharp
+using QuantumComputer.Core;
+
+QuantumCircuit bell = QuantumCircuitBuilder
+    .WithQubits(2)
+    .H(0)
+    .CX(0, 1)
+    .Build();
+```
+
+Parameterized gates:
+
+```csharp
+QuantumCircuit circuit = QuantumCircuitBuilder
+    .WithQubits(1)
+    .H(0)
+    .RZ(0, Math.PI / 2)
+    .Build();
+```
+
+Controlled rotations:
+
+```csharp
+QuantumCircuit circuit = QuantumCircuitBuilder
+    .WithQubits(2)
+    .H(0)
+    .CRZ(0, 1, Math.PI / 4)
+    .Build();
+```
+
+Toffoli:
+
+```csharp
+QuantumCircuit circuit = QuantumCircuitBuilder
+    .WithQubits(3)
+    .H(0)
+    .H(1)
+    .CCX(0, 1, 2)
+    .Build();
+```
+
+---
+
+## Command-Line Quantum Lab
+
+The console project can run quantum experiments from the command line.
 
 ```text
 --help, -h                  Show command-line help
@@ -207,33 +413,23 @@ The simulator can run directly from the command line without entering the REPL.
 --sample <n>                 Sample the final state n times
 ```
 
-### Examples
-
-Run an OpenQASM Bell circuit:
+Examples:
 
 ```bash
 dotnet run --project QuantumComputer -- --qasm examples/bell.qasm --draw --print --expect "ZZ 0 1"
 ```
 
-Run a GHZ circuit:
-
 ```bash
 dotnet run --project QuantumComputer -- --qasm examples/ghz3.qasm --draw --print --expect "ZZ 0 1" --expect "ZZ 1 2"
 ```
-
-Run a controlled-modifier OpenQASM circuit:
 
 ```bash
 dotnet run --project QuantumComputer -- --qasm examples/ctrl-modifier.qasm --draw --print --expect "ZZ 0 1"
 ```
 
-Run a parameterized custom-gate example:
-
 ```bash
 dotnet run --project QuantumComputer -- --qasm examples/parameterized-phase.qasm --draw --print --expect "Z 0"
 ```
-
-Sample a circuit:
 
 ```bash
 dotnet run --project QuantumComputer -- --qasm examples/bell.qasm --sample 1000
@@ -243,13 +439,13 @@ dotnet run --project QuantumComputer -- --qasm examples/bell.qasm --sample 1000
 
 ## Interactive REPL
 
-Start the simulator:
+Start the interactive lab:
 
 ```bash
 dotnet run --project QuantumComputer
 ```
 
-Example REPL session:
+Example session:
 
 ```text
 N-Qubit Gate Interpreter (state-vector)
@@ -284,13 +480,13 @@ RUN <path>                  Run a command script
 
 ---
 
-## OpenQASM Support
+## OpenQASM Laboratory Workflows
 
 The project includes a focused OpenQASM 3.x importer, execution model, custom-gate expander, and exporter.
 
-The aim is not full OpenQASM compliance. The aim is to support a practical subset that is useful for teaching, laboratories, and local simulation.
+The OpenQASM implementation is intended for practical quantum-lab experimentation rather than full language compliance.
 
-### Basic OpenQASM example
+### Basic Bell circuit
 
 ```qasm
 OPENQASM 3.1;
@@ -302,13 +498,13 @@ h q[0];
 cx q[0], q[1];
 ```
 
-Run it:
+Run:
 
 ```bash
 dotnet run --project QuantumComputer -- --qasm examples/bell.qasm --draw --print --expect "ZZ 0 1"
 ```
 
-### Measurement example
+### Measurement
 
 ```qasm
 OPENQASM 3.1;
@@ -330,7 +526,7 @@ Legacy measurement syntax is also supported:
 measure q[0] -> c[0];
 ```
 
-### Reset example
+### Reset
 
 ```qasm
 OPENQASM 3.1;
@@ -342,7 +538,7 @@ x q[0];
 reset q[0];
 ```
 
-### Barrier example
+### Barrier
 
 ```qasm
 OPENQASM 3.1;
@@ -375,13 +571,6 @@ gate bell a, b {
 qubit[2] q;
 
 bell q[0], q[1];
-```
-
-The custom gate expands internally to:
-
-```qasm
-h q[0];
-cx q[0], q[1];
 ```
 
 ### Parameterized custom gate
@@ -438,7 +627,7 @@ double_phase(pi / 4) q[0];
 
 ## OpenQASM Gate Modifiers
 
-The OpenQASM modifier syntax can be used for supported gates.
+Supported OpenQASM modifier syntax can be used for laboratory experiments.
 
 ### Controlled modifier
 
@@ -470,98 +659,17 @@ Supported inverse mappings include common self-inverse gates and inverse phase/r
 
 ---
 
-## Using the Simulator as a Library
-
-The simulator can be used directly from C# without the CLI.
-
-### Build and run a Bell circuit
-
-```csharp
-using QuantumComputer.Core;
-
-var circuit = new QuantumCircuit(2);
-
-circuit.Add(new GateOperation(GateKind.H, new[] { 0 }));
-circuit.Add(new GateOperation(GateKind.CX, new[] { 0, 1 }));
-
-var simulator = new QuantumSimulator(2);
-
-circuit.Run(simulator);
-
-double[] probabilities = simulator.Register.Probabilities();
-
-Console.WriteLine(probabilities[0]); // |00>
-Console.WriteLine(probabilities[3]); // |11>
-```
-
-### Compute an expectation value
-
-```csharp
-using QuantumComputer.Core;
-
-var circuit = new QuantumCircuit(2);
-
-circuit.Add(new GateOperation(GateKind.H, new[] { 0 }));
-circuit.Add(new GateOperation(GateKind.CX, new[] { 0, 1 }));
-
-var simulator = new QuantumSimulator(2);
-circuit.Run(simulator);
-
-var observable = new[]
-{
-    new PauliTerm('Z', 0),
-    new PauliTerm('Z', 1)
-};
-
-double zz = simulator.ExpectPauliString(observable).Real;
-
-Console.WriteLine(zz); // approximately +1
-```
-
-### Load OpenQASM from C#
-
-```csharp
-using QuantumComputer.Core;
-using QuantumComputer.OpenQasm;
-
-QuantumCircuit circuit = OpenQasmCircuitLoader.LoadFromFile("examples/bell.qasm");
-
-var simulator = new QuantumSimulator(circuit.QubitCount);
-circuit.Run(simulator);
-```
-
-### Export a circuit to OpenQASM
-
-```csharp
-using QuantumComputer.Core;
-using QuantumComputer.OpenQasm;
-
-var circuit = new QuantumCircuit(2);
-
-circuit.Add(new GateOperation(GateKind.H, new[] { 0 }));
-circuit.Add(new GateOperation(GateKind.CX, new[] { 0, 1 }));
-
-string qasm = OpenQasmExporter.Export(circuit);
-
-Console.WriteLine(qasm);
-```
-
----
-
-## Recommended Computer Lab Structure
-
-This repository is suitable for a multi-session lab sequence.
+## Recommended Quantum Computer Lab Exercises
 
 ### Lab 1 — State vectors and single-qubit gates
 
-Suggested tasks:
+Objectives:
 
-- create a 1-qubit simulator
-- apply `X`, `H`, `Z`, and `RZ`
-- inspect amplitudes and probabilities
-- compare probability with amplitude magnitude squared
+- inspect amplitudes
+- compare amplitudes and probabilities
+- apply `X`, `H`, `Z`, and rotation gates
 
-Example commands:
+Example:
 
 ```text
 H 0
@@ -570,14 +678,14 @@ EXPECT X 0
 EXPECT Z 0
 ```
 
-### Lab 2 — Measurement and sampling
+### Lab 2 — Sampling and measurement
 
-Suggested tasks:
+Objectives:
 
 - prepare `H |0>`
-- run repeated sampling
-- compare measured frequencies with expected probabilities
-- discuss randomness and seeded randomness
+- sample repeatedly
+- compare counts with theoretical probabilities
+- discuss seeded versus cryptographic randomness
 
 Example:
 
@@ -587,13 +695,24 @@ H 0
 SAMPLE 1000
 ```
 
-### Lab 3 — Entanglement
+SDK version:
 
-Suggested tasks:
+```csharp
+QuantumCircuit circuit = QuantumToolkit
+    .Circuit(1)
+    .H(0)
+    .Build();
 
-- prepare a Bell state
-- compute `ZZ` and `XX` expectations
-- explain why individual qubit measurements are random but correlations are structured
+SamplerResult result = QuantumToolkit.Sampler.Run(circuit, 1000);
+```
+
+### Lab 3 — Bell states and correlations
+
+Objectives:
+
+- create a Bell state
+- compare `ZZ` and `XX` expectation values
+- explain correlated measurement outcomes
 
 Example:
 
@@ -607,13 +726,31 @@ EXPECT XX 0 1
 SAMPLE 1000
 ```
 
-### Lab 4 — GHZ states and multi-qubit circuits
+SDK version:
 
-Suggested tasks:
+```csharp
+QuantumCircuit circuit = QuantumToolkit
+    .Circuit(2)
+    .H(0)
+    .CX(0, 1)
+    .Build();
+
+EstimatorResult zz = QuantumToolkit.Estimator.Estimate(
+    circuit,
+    new[]
+    {
+        new PauliTerm('Z', 0),
+        new PauliTerm('Z', 1)
+    });
+```
+
+### Lab 4 — GHZ states
+
+Objectives:
 
 - prepare a 3-qubit GHZ state
-- inspect probabilities
-- compute multi-qubit correlations
+- inspect the final probability distribution
+- compute pairwise correlations
 
 Example:
 
@@ -625,17 +762,15 @@ CX 1 2
 PRINT
 EXPECT ZZ 0 1
 EXPECT ZZ 1 2
-EXPECT XXX 0 1 2
 ```
 
-### Lab 5 — OpenQASM circuits
+### Lab 5 — OpenQASM execution
 
-Suggested tasks:
+Objectives:
 
-- write a Bell circuit in OpenQASM
+- write a circuit in OpenQASM
 - run it through the CLI
-- draw the circuit
-- compare native commands and OpenQASM syntax
+- compare native commands, SDK circuits, and OpenQASM syntax
 
 Example:
 
@@ -643,24 +778,31 @@ Example:
 dotnet run --project QuantumComputer -- --qasm examples/bell.qasm --draw --print
 ```
 
-### Lab 6 — Custom gates and modifiers
+### Lab 6 — Parameterized gates
+
+Objectives:
+
+- define a parameterized custom gate
+- substitute symbolic angle parameters
+- verify phase behaviour with expectations
+
+Example:
+
+```qasm
+gate phase(theta) a {
+    rz(theta) a;
+}
+```
+
+### Lab 7 — Circuit design mini-project
 
 Suggested tasks:
 
-- define a custom Bell gate
-- define a parameterized phase gate
-- use `ctrl @` and `inv @` modifiers
-- observe custom gate expansion results
-
-### Lab 7 — Mini-project
-
-Suggested project ideas:
-
-- implement a new gate
-- add a new OpenQASM construct
-- create a new example circuit
-- add tests for a known quantum algorithm fragment
-- benchmark memory usage as qubit count increases
+- implement a new example algorithm fragment
+- add a new gate with tests
+- create a new OpenQASM example
+- add a new observable experiment
+- benchmark qubit count versus memory use
 
 ---
 
@@ -670,7 +812,10 @@ Suggested project ideas:
 QuantumComputer.slnx
 
 QuantumComputer.Core
-  Core simulator, state-vector register, gates, circuits, observables, randomness
+  Core simulator, register, gates, circuits, builder, toolkit facade, primitives, observables, randomness
+
+QuantumComputer.Core/Primitives
+  Sampler, SamplerResult, Estimator, EstimatorResult
 
 QuantumComputer.Cli
   Command-line and REPL behaviour
@@ -682,7 +827,7 @@ QuantumComputer.Drawing
   Unicode circuit drawing
 
 QuantumComputer.OpenQasm
-  OpenQASM lexer, parser, AST, importer, exporter, executor, custom gate expansion
+  OpenQASM lexer, parser, AST, importer, exporter, executor, custom-gate expansion
 
 QuantumComputer.Tests
   NUnit regression tests
@@ -714,7 +859,7 @@ The core rule is:
 QuantumComputer.Core must not depend on CLI, Drawing, Parsing, OpenQASM, or the console app.
 ```
 
-This keeps the simulator reusable in other .NET applications.
+This keeps the simulator engine and professional SDK primitives reusable from other .NET applications.
 
 ---
 
@@ -739,17 +884,19 @@ The test suite covers:
 - sampling behaviour
 - Pauli expectation values
 - circuit validation
+- fluent circuit builder usage
+- SDK primitives
 - circuit drawing
 - OpenQASM parsing
 - OpenQASM execution
 - OpenQASM export
 - custom gate expansion
 - parameterized custom gates
-- gate modifiers
+- OpenQASM gate modifiers
 - reset and barrier behaviour
 - import/export round trips where implemented
 
-For lab use, instructors should run the full test suite before distributing a release to students.
+A professional lab release should pass the full test suite before being distributed.
 
 ---
 
@@ -779,6 +926,10 @@ P(i) = |alpha_i|^2
 
 After measurement, the state collapses to the measured outcome or subspace.
 
+The `Sampler` primitive estimates measurement distributions by repeated circuit execution and measurement.
+
+The `Estimator` primitive computes expectation values of Pauli observables against the final simulated state.
+
 ---
 
 ## Qubit Indexing Convention
@@ -807,7 +958,7 @@ not:
 |10>
 ```
 
-Bit strings are displayed in the conventional most-significant-bit to least-significant-bit order.
+Bit strings are displayed in conventional most-significant-bit to least-significant-bit order.
 
 ---
 
@@ -823,7 +974,7 @@ Imaginary = 8 bytes
 Total     = 16 bytes per amplitude
 ```
 
-Approximate memory use:
+Approximate state-vector memory use:
 
 ```text
 20 qubits = 16 MiB
@@ -837,13 +988,13 @@ Approximate memory use:
 28 qubits = 4 GiB
 ```
 
-This is why the simulator is intended primarily for small-to-medium educational circuits.
+This makes the project ideal for laboratory-scale experiments and small-to-medium educational circuits.
 
 ---
 
 ## Limitations
 
-This project is a teaching and experimentation simulator. It is not a hardware runtime.
+This project is a local quantum computer laboratory simulator, not a quantum hardware runtime.
 
 Current limitations include:
 
@@ -852,6 +1003,7 @@ Current limitations include:
 - no density matrix simulator
 - no noise or decoherence model
 - no hardware backend
+- no cloud quantum provider integration
 - no circuit transpiler
 - no gate optimization pass
 - no tensor-network backend
@@ -860,7 +1012,7 @@ Current limitations include:
 - OpenQASM timing, calibration, aliases, physical qubits, and classical control flow are not fully supported
 - circuit drawing is currently Unicode text, not SVG/PNG
 
-These limitations are intentional for the current educational scope.
+These limitations are deliberate for the current professional lab and educational scope.
 
 ---
 
@@ -868,34 +1020,36 @@ These limitations are intentional for the current educational scope.
 
 Possible future improvements:
 
-- SDK-level Sampler and Estimator primitives
-- fluent circuit builder API
 - NuGet package publication
 - GitHub Actions CI badge
 - BenchmarkDotNet benchmark project
 - SVG circuit rendering
 - richer OpenQASM support
 - OpenQASM gate modifiers such as `pow` and `negctrl`
+- additional algorithm examples
+- teaching worksheets and lab notebooks
 - noise channels
 - density matrix simulation
 - Bloch sphere visualization
 - simple transpilation and optimization passes
-- expanded teaching worksheets
+- optional cloud/hardware backend abstraction
 
 ---
 
 ## Contributing
 
-Contributions suitable for computer-lab and teaching use are welcome.
+Contributions should preserve the project goals of clarity, correctness, testability, and professional Quantum Computer Lab usability.
 
 Good contribution areas include:
 
-- additional tests
-- more example circuits
+- additional simulator tests
+- new example circuits
+- improved OpenQASM examples
 - clearer lab exercises
 - documentation improvements
-- additional OpenQASM examples
-- small well-tested simulator features
+- additional SDK examples
+- well-tested gate additions
+- benchmark coverage
 - bug fixes with regression tests
 
 Before submitting changes, run:
@@ -913,6 +1067,8 @@ MIT
 
 ---
 
-## Academic Use
+## Academic and Quantum Lab Use
 
-This project may be used for teaching, demonstrations, coursework, and student labs. Instructors are encouraged to adapt the examples and lab structure to their own module learning outcomes.
+This project may be used for professional Quantum Computer Lab demonstrations, teaching, coursework, workshops, and local quantum-circuit experimentation.
+
+Instructors and lab leads are encouraged to adapt the examples, SDK snippets, and lab structure to their own module or workshop learning outcomes.
