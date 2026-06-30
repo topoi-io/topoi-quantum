@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Topoi.Quantum.Cli</RootNamespace>
+    <AssemblyName>Topoi.Quantum.Cli</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Topoi.Quantum\Topoi.Quantum.csproj" />
+    <ProjectReference Include="..\Topoi.Quantum.Drawing\Topoi.Quantum.Drawing.csproj" />
+    <ProjectReference Include="..\Topoi.Quantum.OpenQasm\Topoi.Quantum.OpenQasm.csproj" />
+    <ProjectReference Include="..\Topoi.Quantum.Parsing\Topoi.Quantum.Parsing.csproj" />
+  </ItemGroup>
+
+</Project>

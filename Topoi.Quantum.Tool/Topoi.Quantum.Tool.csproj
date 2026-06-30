@@ -1,0 +1,30 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Topoi.Quantum.Tool</RootNamespace>
+    <AssemblyName>Topoi.Quantum.Tool</AssemblyName>
+
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>tq</ToolCommandName>
+    <PackageId>Topoi.Quantum.Tool</PackageId>
+    <Version>1.0.0</Version>
+    <Authors>Topoi</Authors>
+    <Description>Command-line tool for Topoi Quantum.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/topoi-io/topoi-quantum</RepositoryUrl>
+    <PackageOutputPath>./nupkg</PackageOutputPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Topoi.Quantum.Cli\Topoi.Quantum.Cli.csproj" />
+    <ProjectReference Include="..\Topoi.Quantum\Topoi.Quantum.csproj" />
+    <ProjectReference Include="..\Topoi.Quantum.Drawing\Topoi.Quantum.Drawing.csproj" />
+    <ProjectReference Include="..\Topoi.Quantum.OpenQasm\Topoi.Quantum.OpenQasm.csproj" />
+    <ProjectReference Include="..\Topoi.Quantum.Parsing\Topoi.Quantum.Parsing.csproj" />
+  </ItemGroup>
+
+</Project>

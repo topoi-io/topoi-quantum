@@ -1,15 +1,15 @@
-# Quantum Computer Lab for .NET
+# Topoi Quantum
 
-**A professional C# / .NET 10 quantum computer laboratory toolkit for state-vector simulation, circuit experimentation, OpenQASM workflows, sampling, expectation estimation, and quantum-computing education.**
+**A professional .NET quantum toolkit for circuit building, dense state-vector simulation, OpenQASM workflows, sampling, estimation, and quantum-computing education.**
 
-This repository provides a complete local **Quantum Computer Lab** environment for learning, experimenting, teaching, and prototyping quantum circuits in C#.
+Topoi Quantum provides a local quantum-computing laboratory and SDK for learning, prototyping, testing, and demonstrating quantum circuits in C# and .NET.
 
 It combines:
 
 - a dense state-vector quantum simulator
 - a fluent circuit builder
 - SDK-level `Sampler` and `Estimator` primitives
-- OpenQASM 3.x import/export support
+- OpenQASM 3.x import/export workflows
 - custom OpenQASM gate expansion
 - circuit drawing
 - command-line execution
@@ -17,15 +17,46 @@ It combines:
 - repeatable testing with seeded randomness
 - NUnit regression coverage
 
-The project is designed for users who want to understand how quantum computation works at the circuit, state-vector, measurement, and observable level while staying inside a professional .NET development workflow.
+The project is designed for users who want to understand and prototype quantum computation at the circuit, state-vector, measurement, and observable level while staying inside a professional .NET development workflow.
+
+Topoi Quantum is intentionally focused on **clarity, correctness, educational value, professional API design, and inspectable simulator architecture**. It is not intended to replace high-performance production simulators, tensor-network simulators, or real quantum hardware backends.
+
+---
+
+## Naming
+
+| Area | Name |
+|---|---|
+| Product | **Topoi Quantum** |
+| Repository | `topoi-quantum` |
+| Main SDK package | `Topoi.Quantum` |
+| CLI tool package | `Topoi.Quantum.Tool` |
+| CLI command | `tq` |
+
+The short CLI command is designed to be easy to type:
+
+```bash
+tq --help
+tq --qasm examples/bell.qasm --draw --print --expect "ZZ 0 1"
+tq --qasm examples/bell.qasm --sample 1000
+```
+
+A future command-oriented syntax may also be added:
+
+```bash
+tq run examples/bell.qasm
+tq draw examples/bell.qasm
+tq sample examples/bell.qasm --shots 1000
+tq expect examples/bell.qasm "ZZ 0 1"
+```
 
 ---
 
 ## Intended Use
 
-This project is suitable for:
+Topoi Quantum is suitable for:
 
-- Quantum Computer Lab exercises
+- quantum-computing lab exercises
 - university quantum-computing modules
 - C# and .NET quantum software teaching
 - OpenQASM experimentation
@@ -35,28 +66,21 @@ This project is suitable for:
 - demonstrating how simulator internals work
 - test-driven quantum software development
 
-It is intentionally focused on **clarity, correctness, educational value, professional API design, and inspectable simulator architecture**.
-
-It is not intended to replace high-performance production simulators, tensor-network simulators, or real quantum hardware backends.
-
 ---
 
 ## Contents
 
 - [Highlights](#highlights)
-- [Learning Outcomes](#learning-outcomes)
 - [Requirements](#requirements)
 - [Quick Start](#quick-start)
 - [SDK Quick Start](#sdk-quick-start)
 - [Sampler Primitive](#sampler-primitive)
 - [Estimator Primitive](#estimator-primitive)
 - [Fluent Circuit Builder](#fluent-circuit-builder)
-- [Command-Line Quantum Lab](#command-line-quantum-lab)
+- [Command-Line Usage](#command-line-usage)
 - [Interactive REPL](#interactive-repl)
-- [OpenQASM Laboratory Workflows](#openqasm-laboratory-workflows)
-- [Custom OpenQASM Gates](#custom-openqasm-gates)
-- [OpenQASM Gate Modifiers](#openqasm-gate-modifiers)
-- [Recommended Quantum Computer Lab Exercises](#recommended-quantum-computer-lab-exercises)
+- [OpenQASM Workflows](#openqasm-workflows)
+- [Recommended Lab Exercises](#recommended-lab-exercises)
 - [Project Structure](#project-structure)
 - [Architecture](#architecture)
 - [Testing](#testing)
@@ -72,7 +96,7 @@ It is not intended to replace high-performance production simulators, tensor-net
 
 ## Highlights
 
-### Professional .NET quantum lab API
+### Professional .NET quantum API
 
 - `QuantumCircuit`
 - `QuantumCircuitBuilder`
@@ -88,19 +112,19 @@ It is not intended to replace high-performance production simulators, tensor-net
 ### Quantum simulation
 
 - N-qubit dense state-vector simulation
-- Pure-state simulation using complex amplitudes
-- Instance-based simulator model
-- Static `Quantum` facade for interactive experiments
-- Full-register measurement with state collapse
-- Single-qubit measurement with partial collapse
-- Repeated sampling
+- pure-state simulation using complex amplitudes
+- instance-based simulator model
+- static `Quantum` facade for interactive experiments
+- full-register measurement with state collapse
+- single-qubit measurement with partial collapse
+- repeated sampling
 - Pauli expectation values
-- State-vector probability inspection
-- State norm diagnostics
-- Manual normalization
-- Snapshot and restore support
-- Cryptographically strong randomness by default
-- Seeded randomness for repeatable lab runs and tests
+- state-vector probability inspection
+- state norm diagnostics
+- manual normalization
+- snapshot and restore support
+- cryptographically strong randomness by default
+- seeded randomness for repeatable lab runs and tests
 
 ### Supported gates
 
@@ -133,7 +157,7 @@ Controlled and multi-qubit gates:
 - `bit[n] c;`
 - standard gate calls
 - parameterized gate calls
-- OpenQASM angle expressions using `pi`, arithmetic, parentheses, and custom-gate parameters
+- angle expressions using `pi`, arithmetic, parentheses, and custom-gate parameters
 - measurement into classical bits
 - legacy measurement syntax
 - reset
@@ -144,25 +168,6 @@ Controlled and multi-qubit gates:
 - recursive custom gate detection
 - gate modifiers such as `ctrl @` and `inv @` where supported
 - OpenQASM export from supported circuit/executable models
-
----
-
-## Learning Outcomes
-
-A user working through this Quantum Computer Lab should be able to:
-
-1. Represent an N-qubit quantum state as `2^n` complex amplitudes.
-2. Apply single-qubit gates and controlled gates to a dense state vector.
-3. Construct Bell states and GHZ states.
-4. Explain measurement collapse and repeated sampling.
-5. Use a `Sampler` primitive to estimate measurement distributions.
-6. Use an `Estimator` primitive to compute Pauli expectation values.
-7. Understand the relationship between amplitudes, probabilities, and observables.
-8. Write and execute OpenQASM circuits.
-9. Define custom OpenQASM gates, including parameterized custom gates.
-10. Use `ctrl @` and `inv @` OpenQASM-style gate modifier workflows where supported.
-11. Understand the exponential memory cost of dense state-vector simulation.
-12. Extend a clean, test-driven C# quantum software architecture.
 
 ---
 
@@ -186,8 +191,8 @@ dotnet --version
 Clone the repository:
 
 ```bash
-git clone https://github.com/topoi-io/Quantum-Computer-Simulator.git
-cd Quantum-Computer-Simulator
+git clone https://github.com/topoi-io/topoi-quantum.git
+cd topoi-quantum
 ```
 
 Build the solution:
@@ -202,13 +207,19 @@ Run all tests:
 dotnet test
 ```
 
-Run the command-line Quantum Computer Lab:
+Run the command-line tool locally after the project rename is complete:
 
 ```bash
-dotnet run --project QuantumComputer
+dotnet run --project Topoi.Quantum.Tool -- --help
 ```
 
 Run an OpenQASM Bell-state experiment:
+
+```bash
+dotnet run --project Topoi.Quantum.Tool -- --qasm examples/bell.qasm --draw --print --expect "ZZ 0 1"
+```
+
+During the rename branch migration, if the executable project has not yet been renamed, use the current project name temporarily:
 
 ```bash
 dotnet run --project QuantumComputer -- --qasm examples/bell.qasm --draw --print --expect "ZZ 0 1"
@@ -228,9 +239,11 @@ Expected Bell-state behaviour:
 
 The SDK layer provides a professional way to build circuits, sample outcomes, and estimate observables from C#.
 
+Target namespace after the project rename:
+
 ```csharp
-using QuantumComputer.Core;
-using QuantumComputer.Core.Primitives;
+using Topoi.Quantum;
+using Topoi.Quantum.Primitives;
 
 QuantumCircuit circuit = QuantumToolkit
     .Circuit(2)
@@ -254,7 +267,12 @@ EstimatorResult estimate = QuantumToolkit.Estimator.Estimate(
 Console.WriteLine($"<ZZ> = {estimate.Value}");
 ```
 
-This is the recommended entry point for professional Quantum Computer Lab exercises.
+During the rename branch migration, existing namespaces may temporarily remain:
+
+```csharp
+using QuantumComputer.Core;
+using QuantumComputer.Core.Primitives;
+```
 
 ---
 
@@ -262,7 +280,7 @@ This is the recommended entry point for professional Quantum Computer Lab exerci
 
 The `Sampler` primitive executes a circuit many times and returns measurement counts and probabilities.
 
-It is useful for laboratory work involving:
+It is useful for:
 
 - Bell-state sampling
 - GHZ-state sampling
@@ -273,8 +291,8 @@ It is useful for laboratory work involving:
 Example:
 
 ```csharp
-using QuantumComputer.Core;
-using QuantumComputer.Core.Primitives;
+using Topoi.Quantum;
+using Topoi.Quantum.Primitives;
 
 QuantumCircuit circuit = QuantumToolkit
     .Circuit(1)
@@ -317,8 +335,8 @@ It is useful for:
 Example:
 
 ```csharp
-using QuantumComputer.Core;
-using QuantumComputer.Core.Primitives;
+using Topoi.Quantum;
+using Topoi.Quantum.Primitives;
 
 QuantumCircuit circuit = QuantumToolkit
     .Circuit(2)
@@ -352,7 +370,7 @@ Console.WriteLine(result.Value); // approximately +1
 `QuantumCircuitBuilder` provides a clean fluent API for constructing circuits.
 
 ```csharp
-using QuantumComputer.Core;
+using Topoi.Quantum;
 
 QuantumCircuit bell = QuantumCircuitBuilder
     .WithQubits(2)
@@ -394,9 +412,22 @@ QuantumCircuit circuit = QuantumCircuitBuilder
 
 ---
 
-## Command-Line Quantum Lab
+## Command-Line Usage
 
-The console project can run quantum experiments from the command line.
+The `tq` command is the intended Topoi Quantum CLI.
+
+Target global-tool usage:
+
+```bash
+tq --help
+tq --qasm examples/bell.qasm --draw --print --expect "ZZ 0 1"
+tq --qasm examples/ghz3.qasm --draw --print --expect "ZZ 0 1" --expect "ZZ 1 2"
+tq --qasm examples/ctrl-modifier.qasm --draw --print --expect "ZZ 0 1"
+tq --qasm examples/parameterized-phase.qasm --draw --print --expect "Z 0"
+tq --qasm examples/bell.qasm --sample 1000
+```
+
+Current option set:
 
 ```text
 --help, -h                  Show command-line help
@@ -413,33 +444,17 @@ The console project can run quantum experiments from the command line.
 --sample <n>                 Sample the final state n times
 ```
 
-Examples:
-
-```bash
-dotnet run --project QuantumComputer -- --qasm examples/bell.qasm --draw --print --expect "ZZ 0 1"
-```
-
-```bash
-dotnet run --project QuantumComputer -- --qasm examples/ghz3.qasm --draw --print --expect "ZZ 0 1" --expect "ZZ 1 2"
-```
-
-```bash
-dotnet run --project QuantumComputer -- --qasm examples/ctrl-modifier.qasm --draw --print --expect "ZZ 0 1"
-```
-
-```bash
-dotnet run --project QuantumComputer -- --qasm examples/parameterized-phase.qasm --draw --print --expect "Z 0"
-```
-
-```bash
-dotnet run --project QuantumComputer -- --qasm examples/bell.qasm --sample 1000
-```
-
 ---
 
 ## Interactive REPL
 
-Start the interactive lab:
+Start the interactive lab locally:
+
+```bash
+dotnet run --project Topoi.Quantum.Tool
+```
+
+During the rename branch migration, if the executable project has not yet been renamed:
 
 ```bash
 dotnet run --project QuantumComputer
@@ -448,7 +463,7 @@ dotnet run --project QuantumComputer
 Example session:
 
 ```text
-N-Qubit Gate Interpreter (state-vector)
+Topoi Quantum CLI
 Number of qubits n (e.g. 1,2,3): 2
 
 H 0
@@ -459,7 +474,7 @@ EXPECT XX 0 1
 SAMPLE 1000
 ```
 
-Useful commands:
+Useful REPL commands:
 
 ```text
 RESET                       Reset the register to |00..0>
@@ -480,9 +495,9 @@ RUN <path>                  Run a command script
 
 ---
 
-## OpenQASM Laboratory Workflows
+## OpenQASM Workflows
 
-The project includes a focused OpenQASM 3.x importer, execution model, custom-gate expander, and exporter.
+Topoi Quantum includes a focused OpenQASM 3.x importer, execution model, custom-gate expander, and exporter.
 
 The OpenQASM implementation is intended for practical quantum-lab experimentation rather than full language compliance.
 
@@ -501,7 +516,7 @@ cx q[0], q[1];
 Run:
 
 ```bash
-dotnet run --project QuantumComputer -- --qasm examples/bell.qasm --draw --print --expect "ZZ 0 1"
+tq --qasm examples/bell.qasm --draw --print --expect "ZZ 0 1"
 ```
 
 ### Measurement
@@ -553,11 +568,7 @@ cx q[0], q[1];
 
 `barrier` is accepted as a circuit marker and treated as a no-op during simulation.
 
----
-
-## Custom OpenQASM Gates
-
-### Non-parameterized custom gate
+### Custom gate
 
 ```qasm
 OPENQASM 3.1;
@@ -588,48 +599,7 @@ qubit[1] q;
 phase(pi / 2) q[0];
 ```
 
-### Parameter expressions
-
-```qasm
-OPENQASM 3.1;
-include "stdgates.inc";
-
-gate half_phase(theta) a {
-    rz(theta / 2) a;
-}
-
-qubit[1] q;
-
-half_phase(pi) q[0];
-```
-
-### Nested parameterized gates
-
-```qasm
-OPENQASM 3.1;
-include "stdgates.inc";
-
-gate phase(theta) a {
-    rz(theta) a;
-}
-
-gate double_phase(theta) a {
-    phase(theta) a;
-    phase(theta) a;
-}
-
-qubit[1] q;
-
-double_phase(pi / 4) q[0];
-```
-
----
-
-## OpenQASM Gate Modifiers
-
-Supported OpenQASM modifier syntax can be used for laboratory experiments.
-
-### Controlled modifier
+### Gate modifiers
 
 ```qasm
 OPENQASM 3.1;
@@ -641,10 +611,6 @@ h q[0];
 ctrl @ x q[0], q[1];
 ```
 
-This maps to a controlled-X operation and creates a Bell state.
-
-### Inverse modifier
-
 ```qasm
 OPENQASM 3.1;
 include "stdgates.inc";
@@ -655,11 +621,9 @@ s q[0];
 inv @ s q[0];
 ```
 
-Supported inverse mappings include common self-inverse gates and inverse phase/rotation operations where implemented.
-
 ---
 
-## Recommended Quantum Computer Lab Exercises
+## Recommended Lab Exercises
 
 ### Lab 1 — State vectors and single-qubit gates
 
@@ -695,17 +659,6 @@ H 0
 SAMPLE 1000
 ```
 
-SDK version:
-
-```csharp
-QuantumCircuit circuit = QuantumToolkit
-    .Circuit(1)
-    .H(0)
-    .Build();
-
-SamplerResult result = QuantumToolkit.Sampler.Run(circuit, 1000);
-```
-
 ### Lab 3 — Bell states and correlations
 
 Objectives:
@@ -724,24 +677,6 @@ PRINT
 EXPECT ZZ 0 1
 EXPECT XX 0 1
 SAMPLE 1000
-```
-
-SDK version:
-
-```csharp
-QuantumCircuit circuit = QuantumToolkit
-    .Circuit(2)
-    .H(0)
-    .CX(0, 1)
-    .Build();
-
-EstimatorResult zz = QuantumToolkit.Estimator.Estimate(
-    circuit,
-    new[]
-    {
-        new PauliTerm('Z', 0),
-        new PauliTerm('Z', 1)
-    });
 ```
 
 ### Lab 4 — GHZ states
@@ -775,61 +710,37 @@ Objectives:
 Example:
 
 ```bash
-dotnet run --project QuantumComputer -- --qasm examples/bell.qasm --draw --print
+tq --qasm examples/bell.qasm --draw --print
 ```
-
-### Lab 6 — Parameterized gates
-
-Objectives:
-
-- define a parameterized custom gate
-- substitute symbolic angle parameters
-- verify phase behaviour with expectations
-
-Example:
-
-```qasm
-gate phase(theta) a {
-    rz(theta) a;
-}
-```
-
-### Lab 7 — Circuit design mini-project
-
-Suggested tasks:
-
-- implement a new example algorithm fragment
-- add a new gate with tests
-- create a new OpenQASM example
-- add a new observable experiment
-- benchmark qubit count versus memory use
 
 ---
 
 ## Project Structure
 
-```text
-QuantumComputer.slnx
+Target structure after the rename is complete:
 
-QuantumComputer.Core
+```text
+Topoi.Quantum.slnx
+
+Topoi.Quantum
   Core simulator, register, gates, circuits, builder, toolkit facade, primitives, observables, randomness
 
-QuantumComputer.Core/Primitives
-  Sampler, SamplerResult, Estimator, EstimatorResult
-
-QuantumComputer.Cli
-  Command-line and REPL behaviour
-
-QuantumComputer.Parsing
-  Native .qc parser and observable parser
-
-QuantumComputer.Drawing
-  Unicode circuit drawing
-
-QuantumComputer.OpenQasm
+Topoi.Quantum.OpenQasm
   OpenQASM lexer, parser, AST, importer, exporter, executor, custom-gate expansion
 
-QuantumComputer.Tests
+Topoi.Quantum.Parsing
+  Native .qc parser and observable parser
+
+Topoi.Quantum.Drawing
+  Unicode circuit drawing
+
+Topoi.Quantum.Cli
+  Command-line and REPL behaviour
+
+Topoi.Quantum.Tool
+  Packaged executable entry point for the `tq` command
+
+Topoi.Quantum.Tests
   NUnit regression tests
 
 examples
@@ -843,20 +754,20 @@ examples
 The intended dependency direction is:
 
 ```text
-QuantumComputer
+Topoi.Quantum.Tool
     ↓
-QuantumComputer.Cli
-QuantumComputer.Drawing
-QuantumComputer.Parsing
-QuantumComputer.OpenQasm
+Topoi.Quantum.Cli
+Topoi.Quantum.Drawing
+Topoi.Quantum.Parsing
+Topoi.Quantum.OpenQasm
     ↓
-QuantumComputer.Core
+Topoi.Quantum
 ```
 
 The core rule is:
 
 ```text
-QuantumComputer.Core must not depend on CLI, Drawing, Parsing, OpenQASM, or the console app.
+Topoi.Quantum must not depend on CLI, Drawing, Parsing, OpenQASM, or the console/tool project.
 ```
 
 This keeps the simulator engine and professional SDK primitives reusable from other .NET applications.
@@ -896,7 +807,7 @@ The test suite covers:
 - reset and barrier behaviour
 - import/export round trips where implemented
 
-A professional lab release should pass the full test suite before being distributed.
+A professional release should pass the full test suite before being distributed.
 
 ---
 
@@ -994,7 +905,7 @@ This makes the project ideal for laboratory-scale experiments and small-to-mediu
 
 ## Limitations
 
-This project is a local quantum computer laboratory simulator, not a quantum hardware runtime.
+Topoi Quantum is a local quantum toolkit and ideal state-vector simulator, not a quantum hardware runtime.
 
 Current limitations include:
 
@@ -1020,7 +931,8 @@ These limitations are deliberate for the current professional lab and educationa
 
 Possible future improvements:
 
-- NuGet package publication
+- NuGet package publication as `Topoi.Quantum`
+- .NET global tool publication as `Topoi.Quantum.Tool` with command `tq`
 - GitHub Actions CI badge
 - BenchmarkDotNet benchmark project
 - SVG circuit rendering
@@ -1038,7 +950,7 @@ Possible future improvements:
 
 ## Contributing
 
-Contributions should preserve the project goals of clarity, correctness, testability, and professional Quantum Computer Lab usability.
+Contributions should preserve the project goals of clarity, correctness, testability, and professional Topoi Quantum usability.
 
 Good contribution areas include:
 
@@ -1069,6 +981,6 @@ MIT
 
 ## Academic and Quantum Lab Use
 
-This project may be used for professional Quantum Computer Lab demonstrations, teaching, coursework, workshops, and local quantum-circuit experimentation.
+Topoi Quantum may be used for professional quantum-computing demonstrations, teaching, coursework, workshops, and local quantum-circuit experimentation.
 
 Instructors and lab leads are encouraged to adapt the examples, SDK snippets, and lab structure to their own module or workshop learning outcomes.
