@@ -27,7 +27,7 @@ if (args.Length > 0)
     return;
 }
 
-Console.WriteLine("N-Qubit Gate Interpreter (state-vector)");
+Console.WriteLine("Topoi Quantum CLI (state-vector simulator)");
 Console.Write("Number of qubits n (e.g. 1,2,3): ");
 
 int n = 1;
@@ -42,7 +42,7 @@ Quantum.Reset();
 QuantumConsolePrinter.PrintStateTop(Quantum.Register);
 
 Console.WriteLine();
-Console.WriteLine("Type HELP for commands. Angles are in radians.\n");
+Console.WriteLine("Type HELP for Topoi Quantum commands. Angles are in radians.\n");
 
 while (true)
 {

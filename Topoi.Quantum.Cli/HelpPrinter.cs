@@ -4,7 +4,7 @@ public static class HelpPrinter
 {
     public static void PrintInteractiveHelp()
     {
-        Console.WriteLine("Commands:");
+        Console.WriteLine("Topoi Quantum interactive commands:");
 
         Console.WriteLine("  PRINT                       Show top amplitudes and probabilities");
         Console.WriteLine("  PROBS                       Show top basis probabilities without measurement");
@@ -58,8 +58,9 @@ public static class HelpPrinter
 
         Console.WriteLine();
         Console.WriteLine("CLI examples:");
-        Console.WriteLine("  dotnet run -- --qubits 2 --run examples/bell.qc");
-        Console.WriteLine("  dotnet run -- --qubits 2 --circuit circuits/bell.qc --print --expect \"ZZ 0 1\"");
+        Console.WriteLine("  tq --qubits 2 --run examples/bell.qc");
+        Console.WriteLine("  tq --qubits 2 --circuit circuits/bell.qc --print --expect \"ZZ 0 1\"");
+        Console.WriteLine("  tq --qasm examples/bell.qasm --draw --print --expect \"ZZ 0 1\"");
 
         Console.WriteLine();
         Console.WriteLine("Angle formats:");
@@ -68,10 +69,10 @@ public static class HelpPrinter
 
     public static void PrintCliHelp()
     {
-        Console.WriteLine("N-Qubit Gate Interpreter CLI");
+        Console.WriteLine("Topoi Quantum CLI");
         Console.WriteLine();
         Console.WriteLine("Usage:");
-        Console.WriteLine("  dotnet run -- [options]");
+        Console.WriteLine("  tq [options]");
         Console.WriteLine();
         Console.WriteLine("Options:");
         Console.WriteLine("  --help, -h                  Show command-line help");
@@ -87,10 +88,11 @@ public static class HelpPrinter
         Console.WriteLine("  --sample <n>                 Sample final state n times");
         Console.WriteLine();
         Console.WriteLine("Examples:");
-        Console.WriteLine("  dotnet run -- --qubits 2 --run examples/bell.qc");
-        Console.WriteLine("  dotnet run -- --qubits 2 --circuit circuits/bell.qc --print-circuit --print");
-        Console.WriteLine("  dotnet run -- --qubits 2 --circuit circuits/bell.qc --expect \"ZZ 0 1\" --expect \"XX 0 1\"");
-        Console.WriteLine("  dotnet run -- --qubits 3 --circuit circuits/ghz3.qc --probs --sample 1000");
-        Console.WriteLine("  dotnet run -- --qubits 2 --circuit circuits/bell.qc --draw --expect \"ZZ 0 1\"");
+        Console.WriteLine("  tq --qubits 2 --run examples/bell.qc");
+        Console.WriteLine("  tq --qubits 2 --circuit circuits/bell.qc --print-circuit --print");
+        Console.WriteLine("  tq --qubits 2 --circuit circuits/bell.qc --expect \"ZZ 0 1\" --expect \"XX 0 1\"");
+        Console.WriteLine("  tq --qubits 3 --circuit circuits/ghz3.qc --probs --sample 1000");
+        Console.WriteLine("  tq --qubits 2 --circuit circuits/bell.qc --draw --expect \"ZZ 0 1\"");
+        Console.WriteLine("  tq --qasm examples/bell.qasm --draw --print --expect \"ZZ 0 1\"");
     }
 }
