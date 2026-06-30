@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\QuantumComputer.Core\Topoi.Quantum.csproj" />
+    <ProjectReference Include="..\QuantumComputer.Drawing\Topoi.Quantum.Drawing.csproj" />
+    <ProjectReference Include="..\QuantumComputer.OpenQasm\Topoi.Quantum.OpenQasm.csproj" />
+    <ProjectReference Include="..\QuantumComputer.Parsing\Topoi.Quantum.Parsing.csproj" />
+  </ItemGroup>
+
+</Project>
