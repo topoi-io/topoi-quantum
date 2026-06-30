@@ -113,6 +113,7 @@ Topoi Quantum is suitable for:
 
 - N-qubit dense state-vector simulation
 - pure-state simulation using complex amplitudes
+- default dense state-vector safety limit of 25 qubits
 - instance-based simulator model
 - static `Quantum` facade for interactive experiments
 - full-register measurement with state collapse
@@ -885,7 +886,9 @@ Imaginary = 8 bytes
 Total     = 16 bytes per amplitude
 ```
 
-Approximate state-vector memory use:
+Topoi Quantum currently enforces a **default dense state-vector safety limit of 25 qubits**. This is an intentional MVP guardrail that prevents accidental allocation of very large state vectors during interactive use, test runs, and local development.
+
+Approximate state-vector memory use within the supported default range:
 
 ```text
 20 qubits = 16 MiB
@@ -894,12 +897,11 @@ Approximate state-vector memory use:
 23 qubits = 128 MiB
 24 qubits = 256 MiB
 25 qubits = 512 MiB
-26 qubits = 1 GiB
-27 qubits = 2 GiB
-28 qubits = 4 GiB
 ```
 
-This makes the project ideal for laboratory-scale experiments and small-to-medium educational circuits.
+Attempts to create a dense register above 25 qubits currently throw a clear validation error explaining the memory requirement and the default safety limit.
+
+This makes the project ideal for laboratory-scale experiments, educational circuits, and small-to-medium local simulations. Larger dense simulations, explicit advanced overrides, tensor-network simulation, GPU acceleration, and distributed simulation are outside the current MVP scope.
 
 ---
 
@@ -910,6 +912,7 @@ Topoi Quantum is a local quantum toolkit and ideal state-vector simulator, not a
 Current limitations include:
 
 - dense state-vector simulation only
+- default dense simulator safety limit of 25 qubits
 - pure states only
 - no density matrix simulator
 - no noise or decoherence model
@@ -940,6 +943,7 @@ Possible future improvements:
 - OpenQASM gate modifiers such as `pow` and `negctrl`
 - additional algorithm examples
 - teaching worksheets and lab notebooks
+- explicit advanced override for dense simulations above 25 qubits
 - noise channels
 - density matrix simulation
 - Bloch sphere visualization
@@ -982,5 +986,3 @@ MIT
 ## Academic and Quantum Lab Use
 
 Topoi Quantum may be used for professional quantum-computing demonstrations, teaching, coursework, workshops, and local quantum-circuit experimentation.
-
-Instructors and lab leads are encouraged to adapt the examples, SDK snippets, and lab structure to their own module or workshop learning outcomes.
