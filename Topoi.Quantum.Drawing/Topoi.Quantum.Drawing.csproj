@@ -4,6 +4,8 @@
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <RootNamespace>Topoi.Quantum.Drawing</RootNamespace>
+    <AssemblyName>Topoi.Quantum.Drawing</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>

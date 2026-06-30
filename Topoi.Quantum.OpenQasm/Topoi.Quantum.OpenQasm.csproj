@@ -4,6 +4,8 @@
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <RootNamespace>Topoi.Quantum.OpenQasm</RootNamespace>
+    <AssemblyName>Topoi.Quantum.OpenQasm</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>

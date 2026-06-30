@@ -6,6 +6,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
+    <RootNamespace>Topoi.Quantum.Tests</RootNamespace>
+    <AssemblyName>Topoi.Quantum.Tests</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>
