@@ -1,4 +1,5 @@
 ﻿using NUnit.Framework;
+using Topoi.Quantum.Cli;
 
 namespace Topoi.Quantum.Tests;
 
@@ -123,5 +124,32 @@ public sealed class QuantumCircuitTests
 
         TestHelpers.AssertProbability(0, 1.0);
         TestHelpers.AssertProbability(1, 0.0);
+    }
+
+    [Test]
+    public void FormatCircuit_WithBellCircuit_ReturnsOperationList()
+    {
+        QuantumCircuit circuit = QuantumCircuitBuilder
+            .WithQubits(2)
+            .H(0)
+            .CX(0, 1)
+            .Build();
+
+        string text = QuantumConsolePrinter.FormatCircuit(circuit);
+
+        Assert.That(text, Does.Contain("Circuit: 2 qubits, 2 operations"));
+        Assert.That(text, Does.Contain("0: H 0"));
+        Assert.That(text, Does.Contain("1: CX 0 1"));
+    }
+
+    [Test]
+    public void FormatCircuit_WithEmptyCircuit_PrintsEmpty()
+    {
+        var circuit = new QuantumCircuit(2);
+
+        string text = QuantumConsolePrinter.FormatCircuit(circuit);
+
+        Assert.That(text, Does.Contain("Circuit: 2 qubits, 0 operations"));
+        Assert.That(text, Does.Contain("(empty)"));
     }
 }

@@ -182,7 +182,7 @@ public sealed class CommandExecutor
                 if (_loadedCircuit is null)
                     Console.WriteLine("No circuit loaded. Use LOAD <path> first.");
                 else
-                    _loadedCircuit.Print();
+                    QuantumConsolePrinter.PrintCircuit(_loadedCircuit);
                 break;
 
             case "DRAW":

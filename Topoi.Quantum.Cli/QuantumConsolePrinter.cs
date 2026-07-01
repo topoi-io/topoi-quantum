@@ -1,6 +1,6 @@
-﻿using Topoi.Quantum.Parsing;
-
-using System.Numerics;
+﻿using System.Numerics;
+using System.Text;
+using Topoi.Quantum.Parsing;
 
 namespace Topoi.Quantum.Cli;
 
@@ -80,6 +80,31 @@ public static class QuantumConsolePrinter
 
         if (Math.Abs(value.Imaginary) > 1e-10)
             Console.WriteLine($"  note: small imaginary residue = {value.Imaginary:+0.###e+0;-0.###e+0;0}");
+    }
+
+    public static string FormatCircuit(QuantumCircuit circuit)
+    {
+        ArgumentNullException.ThrowIfNull(circuit);
+
+        var sb = new StringBuilder();
+
+        sb.AppendLine($"Circuit: {circuit.QubitCount} qubits, {circuit.Operations.Count} operations");
+
+        if (circuit.Operations.Count == 0)
+        {
+            sb.AppendLine("(empty)");
+            return sb.ToString();
+        }
+
+        for (int i = 0; i < circuit.Operations.Count; i++)
+            sb.AppendLine($"{i}: {circuit.Operations[i].ToCommandString()}");
+
+        return sb.ToString();
+    }
+
+    public static void PrintCircuit(QuantumCircuit circuit)
+    {
+        Console.Write(FormatCircuit(circuit));
     }
 
     private static long EstimateStateVectorBytes(int qubitCount)

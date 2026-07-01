@@ -96,7 +96,7 @@ void RunCommandLine(CliOptions options, CommandExecutor executor)
             Quantum.Register.QubitCount);
 
         if (options.PrintCircuit)
-            circuit.Print();
+            QuantumConsolePrinter.PrintCircuit(circuit);
 
         if (options.DrawCircuit)
             Console.Write(CircuitDrawer.Draw(circuit));
@@ -114,7 +114,7 @@ void RunCommandLine(CliOptions options, CommandExecutor executor)
         Quantum.Init(circuit.QubitCount);
 
         if (options.PrintCircuit)
-            circuit.Print();
+            QuantumConsolePrinter.PrintCircuit(circuit);
 
         if (options.DrawCircuit)
             Console.Write(CircuitDrawer.Draw(circuit));

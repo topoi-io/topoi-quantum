@@ -57,20 +57,6 @@ public sealed class QuantumCircuit
             operation.Apply(simulator);
     }
 
-    public void Print()
-    {
-        Console.WriteLine($"Circuit: {QubitCount} qubits, {_operations.Count} operations");
-
-        if (_operations.Count == 0)
-        {
-            Console.WriteLine("(empty)");
-            return;
-        }
-
-        for (int i = 0; i < _operations.Count; i++)
-            Console.WriteLine($"{i}: {_operations[i].ToCommandString()}");
-    }
-
     private void ValidateOperation(GateOperation operation)
     {
         foreach (int q in operation.Qubits)
