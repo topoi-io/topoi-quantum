@@ -101,7 +101,7 @@ void RunCommandLine(CliOptions options, CommandExecutor executor)
         if (options.DrawCircuit)
             Console.Write(CircuitDrawer.Draw(circuit));
 
-        circuit.Run(resetFirst: true);
+        circuit.Run(Quantum.DefaultSimulator, resetFirst: true);
 
         RunPostExecutionOptions(options);
         return;
@@ -119,7 +119,7 @@ void RunCommandLine(CliOptions options, CommandExecutor executor)
         if (options.DrawCircuit)
             Console.Write(CircuitDrawer.Draw(circuit));
 
-        circuit.Run(resetFirst: true);
+        circuit.Run(Quantum.DefaultSimulator, resetFirst: true);
 
         RunPostExecutionOptions(options);
         return;

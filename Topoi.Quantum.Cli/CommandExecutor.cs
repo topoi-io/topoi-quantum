@@ -199,7 +199,7 @@ public sealed class CommandExecutor
                 }
                 else
                 {
-                    _loadedCircuit.Run(resetFirst: true);
+                    _loadedCircuit.Run(Quantum.DefaultSimulator, resetFirst: true);
                     Console.WriteLine("Circuit executed.");
                 }
                 break;

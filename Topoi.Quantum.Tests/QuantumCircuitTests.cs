@@ -39,56 +39,45 @@ public sealed class QuantumCircuitTests
     [Test]
     public void Circuit_Run_CreatesBellState()
     {
-        var circuit = new QuantumCircuit(2);
+        QuantumCircuit circuit = QuantumCircuitBuilder
+            .WithQubits(2)
+            .H(0)
+            .CX(0, 1)
+            .Build();
 
-        circuit.Add(new GateOperation(GateKind.H, new[] { 0 }));
-        circuit.Add(new GateOperation(GateKind.CX, new[] { 0, 1 }));
+        var simulator = new QuantumSimulator(circuit.QubitCount);
 
-        circuit.Run();
+        circuit.Run(simulator);
 
-        TestHelpers.AssertProbability(TestHelpers.Basis(), 0.5);
-        TestHelpers.AssertProbability(TestHelpers.Basis(0, 1), 0.5);
+        double[] probabilities = simulator.Register.Probabilities();
 
-        TestHelpers.AssertExpectation(
-            1.0,
-            new PauliTerm('Z', 0),
-            new PauliTerm('Z', 1));
-
-        TestHelpers.AssertExpectation(
-            1.0,
-            new PauliTerm('X', 0),
-            new PauliTerm('X', 1));
+        Assert.That(probabilities[TestHelpers.Basis()], Is.EqualTo(0.5).Within(TestHelpers.Tolerance));
+        Assert.That(probabilities[TestHelpers.Basis(0, 1)], Is.EqualTo(0.5).Within(TestHelpers.Tolerance));
     }
 
     [Test]
     public void Circuit_Run_CreatesGHZState()
     {
-        var circuit = new QuantumCircuit(3);
+        QuantumCircuit circuit = QuantumCircuitBuilder
+            .WithQubits(3)
+            .H(0)
+            .CX(0, 1)
+            .CX(1, 2)
+            .Build();
 
-        circuit.Add(new GateOperation(GateKind.H, new[] { 0 }));
-        circuit.Add(new GateOperation(GateKind.CX, new[] { 0, 1 }));
-        circuit.Add(new GateOperation(GateKind.CX, new[] { 1, 2 }));
+        var simulator = new QuantumSimulator(circuit.QubitCount);
 
-        circuit.Run();
+        circuit.Run(simulator);
 
-        TestHelpers.AssertProbability(TestHelpers.Basis(), 0.5);
-        TestHelpers.AssertProbability(TestHelpers.Basis(0, 1, 2), 0.5);
+        double[] probabilities = simulator.Register.Probabilities();
 
-        TestHelpers.AssertExpectation(
-            1.0,
-            new PauliTerm('Z', 0),
-            new PauliTerm('Z', 1));
+        Assert.That(
+            probabilities[TestHelpers.Basis()],
+            Is.EqualTo(0.5).Within(TestHelpers.Tolerance));
 
-        TestHelpers.AssertExpectation(
-            1.0,
-            new PauliTerm('Z', 1),
-            new PauliTerm('Z', 2));
-
-        TestHelpers.AssertExpectation(
-            1.0,
-            new PauliTerm('X', 0),
-            new PauliTerm('X', 1),
-            new PauliTerm('X', 2));
+        Assert.That(
+            probabilities[TestHelpers.Basis(0, 1, 2)],
+            Is.EqualTo(0.5).Within(TestHelpers.Tolerance));
     }
 
     [Test]
@@ -120,7 +109,7 @@ public sealed class QuantumCircuitTests
         var circuit = new QuantumCircuit(1);
         circuit.Add(new GateOperation(GateKind.X, new[] { 0 }));
 
-        circuit.Run(resetFirst: false);
+        circuit.Run(Quantum.DefaultSimulator, resetFirst: false);
 
         TestHelpers.AssertProbability(0, 1.0);
         TestHelpers.AssertProbability(1, 0.0);

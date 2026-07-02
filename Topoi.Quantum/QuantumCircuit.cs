@@ -22,23 +22,6 @@ public sealed class QuantumCircuit
         _operations.Add(operation);
     }
 
-    public void Run(bool resetFirst = true)
-    {
-        if (Quantum.Register.QubitCount != QubitCount)
-        {
-            if (!resetFirst)
-            {
-                throw new InvalidOperationException(
-                    "Cannot run circuit without reset because the current simulator register " +
-                    $"has {Quantum.Register.QubitCount} qubits but the circuit requires {QubitCount}.");
-            }
-
-            Quantum.Init(QubitCount);
-        }
-
-        Run(Quantum.DefaultSimulator, resetFirst);
-    }
-
     public void Run(QuantumSimulator simulator, bool resetFirst = true)
     {
         if (simulator is null)
