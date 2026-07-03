@@ -7,7 +7,15 @@ namespace Topoi.Quantum.Cli;
 
 public sealed class CommandExecutor
 {
+    private readonly QuantumSimulator _simulator;
     private QuantumCircuit? _loadedCircuit;
+
+    public CommandExecutor(QuantumSimulator simulator)
+    {
+        _simulator = simulator ?? throw new ArgumentNullException(nameof(simulator));
+    }
+
+    public QuantumSimulator Simulator => _simulator;
 
     public QuantumCircuit? LoadedCircuit => _loadedCircuit;
 
@@ -34,128 +42,128 @@ public sealed class CommandExecutor
                 break;
 
             case "PRINT":
-                QuantumConsolePrinter.PrintStateTop(Quantum.Register);
+                QuantumConsolePrinter.PrintStateTop(_simulator.Register);
                 break;
 
             case "PROBS":
             case "PROBABILITIES":
-                QuantumConsolePrinter.PrintProbabilitiesTop(Quantum.Register);
+                QuantumConsolePrinter.PrintProbabilitiesTop(_simulator.Register);
                 break;
 
             case "EXPECT":
                 {
                     PauliTerm[] terms = ObservableParser.Parse(parts, 1);
-                    QuantumConsolePrinter.PrintExpectation(Quantum.DefaultSimulator, terms);
+                    QuantumConsolePrinter.PrintExpectation(_simulator, terms);
                     break;
                 }
 
             case "RESET":
-                Quantum.Reset();
+                _simulator.Reset();
                 Console.WriteLine("Reset to |00..0⟩.");
                 break;
 
             case "MEASUREALL":
                 {
-                    int outcome = Quantum.MeasureAll();
-                    Console.WriteLine($"Measured: |{Quantum.Register.BitString(outcome)}⟩ (state collapsed)");
+                    int outcome = _simulator.MeasureAll();
+                    Console.WriteLine($"Measured: |{_simulator.Register.BitString(outcome)}⟩ (state collapsed)");
                     break;
                 }
 
             case "MEASURE":
                 {
                     int q = ParseQubit(parts, 1);
-                    int bit = Quantum.Measure(q);
+                    int bit = _simulator.Measure(q);
 
                     Console.WriteLine($"Measured qubit {q}: {bit} (partial collapse)");
                     break;
                 }
 
             case "MEM":
-                QuantumConsolePrinter.PrintMemoryEstimate(Quantum.Register);
+                QuantumConsolePrinter.PrintMemoryEstimate(_simulator.Register);
                 break;
 
             case "NORM":
-                QuantumConsolePrinter.PrintNorm(Quantum.Register);
+                QuantumConsolePrinter.PrintNorm(_simulator.Register);
                 break;
 
             case "NORMALIZE":
-                Quantum.Normalize();
+                _simulator.Normalize();
                 Console.WriteLine("State normalized.");
                 break;
 
             case "X":
-                Quantum.X(ParseQubit(parts, 1));
+                _simulator.X(ParseQubit(parts, 1));
                 break;
 
             case "Y":
-                Quantum.Y(ParseQubit(parts, 1));
+                _simulator.Y(ParseQubit(parts, 1));
                 break;
 
             case "Z":
-                Quantum.Z(ParseQubit(parts, 1));
+                _simulator.Z(ParseQubit(parts, 1));
                 break;
 
             case "H":
-                Quantum.H(ParseQubit(parts, 1));
+                _simulator.H(ParseQubit(parts, 1));
                 break;
 
             case "S":
-                Quantum.S(ParseQubit(parts, 1));
+                _simulator.S(ParseQubit(parts, 1));
                 break;
 
             case "T":
-                Quantum.T(ParseQubit(parts, 1));
+                _simulator.T(ParseQubit(parts, 1));
                 break;
 
             case "RX":
-                Quantum.RX(ParseQubit(parts, 1), ParseAngle(parts, 2));
+                _simulator.RX(ParseQubit(parts, 1), ParseAngle(parts, 2));
                 break;
 
             case "RY":
-                Quantum.RY(ParseQubit(parts, 1), ParseAngle(parts, 2));
+                _simulator.RY(ParseQubit(parts, 1), ParseAngle(parts, 2));
                 break;
 
             case "RZ":
-                Quantum.RZ(ParseQubit(parts, 1), ParseAngle(parts, 2));
+                _simulator.RZ(ParseQubit(parts, 1), ParseAngle(parts, 2));
                 break;
 
             case "CX":
             case "CNOT":
-                Quantum.CX(ParseQubit(parts, 1), ParseQubit(parts, 2));
+                _simulator.CX(ParseQubit(parts, 1), ParseQubit(parts, 2));
                 break;
 
             case "CZ":
-                Quantum.CZ(ParseQubit(parts, 1), ParseQubit(parts, 2));
+                _simulator.CZ(ParseQubit(parts, 1), ParseQubit(parts, 2));
                 break;
 
             case "SWAP":
-                Quantum.SWAP(ParseQubit(parts, 1), ParseQubit(parts, 2));
+                _simulator.SWAP(ParseQubit(parts, 1), ParseQubit(parts, 2));
                 break;
 
             case "CCX":
             case "TOFFOLI":
-                Quantum.CCX(
+                _simulator.CCX(
                     ParseQubit(parts, 1),
                     ParseQubit(parts, 2),
                     ParseQubit(parts, 3));
                 break;
 
             case "CRX":
-                Quantum.CRX(
+                _simulator.CRX(
                     ParseQubit(parts, 1),
                     ParseQubit(parts, 2),
                     ParseAngle(parts, 3));
                 break;
 
             case "CRY":
-                Quantum.CRY(
+                _simulator.CRY(
                     ParseQubit(parts, 1),
                     ParseQubit(parts, 2),
                     ParseAngle(parts, 3));
                 break;
 
             case "CRZ":
-                Quantum.CRZ(
+                _simulator.CRZ(
                     ParseQubit(parts, 1),
                     ParseQubit(parts, 2),
                     ParseAngle(parts, 3));
@@ -199,7 +207,7 @@ public sealed class CommandExecutor
                 }
                 else
                 {
-                    _loadedCircuit.Run(Quantum.DefaultSimulator, resetFirst: true);
+                    _loadedCircuit.Run(_simulator, resetFirst: true);
                     Console.WriteLine("Circuit executed.");
                 }
                 break;
@@ -272,7 +280,7 @@ public sealed class CommandExecutor
             throw new ArgumentException("Usage: LOAD <path>   Example: LOAD circuits/bell.qc");
 
         string path = ReconstructPath(parts, 1);
-        return CircuitFileLoader.Load(path, Quantum.Register.QubitCount);
+        return CircuitFileLoader.Load(path, _simulator.Register.QubitCount);
     }
 
     private static int ParseQubit(string[] parts, int index)
@@ -320,9 +328,9 @@ public sealed class CommandExecutor
         return path;
     }
 
-    private static void RunQRand(string[] parts)
+    private void RunQRand(string[] parts)
     {
-        int n = Quantum.Register.QubitCount;
+        int n = _simulator.Register.QubitCount;
         int k = n;
 
         if (parts.Length >= 2)
@@ -334,13 +342,13 @@ public sealed class CommandExecutor
                 throw new ArgumentException($"QRAND {k} requested, but register has only {n} qubits. Start with n >= {k}.");
         }
 
-        Quantum.Reset();
+        _simulator.Reset();
 
         for (int q = 0; q < n; q++)
-            Quantum.H(q);
+            _simulator.H(q);
 
-        int outcome = Quantum.MeasureAll();
-        string bits = Quantum.Register.BitString(outcome);
+        int outcome = _simulator.MeasureAll();
+        string bits = _simulator.Register.BitString(outcome);
 
         string kBits = TakeLowBits(bits, k);
         int value = Convert.ToInt32(kBits, 2);
@@ -349,24 +357,24 @@ public sealed class CommandExecutor
         Console.WriteLine($"(int: {value})");
     }
 
-    private static void RunSample(string[] parts)
+    private void RunSample(string[] parts)
     {
         if (parts.Length < 2 || !int.TryParse(parts[1], out int trials) || trials <= 0)
             throw new ArgumentException("Usage: SAMPLE <n>   Example: SAMPLE 1000");
 
-        Complex[] snap = Quantum.SnapshotState();
+        Complex[] snap = _simulator.SnapshotState();
 
         var counts = new Dictionary<int, int>();
 
         for (int i = 0; i < trials; i++)
         {
-            int outcome = Quantum.MeasureAll();
+            int outcome = _simulator.MeasureAll();
 
             counts[outcome] = counts.TryGetValue(outcome, out int c)
                 ? c + 1
                 : 1;
 
-            Quantum.RestoreState(snap);
+            _simulator.RestoreState(snap);
         }
 
         Console.WriteLine($"Samples: {trials}");
@@ -374,14 +382,14 @@ public sealed class CommandExecutor
         foreach (var kv in counts.OrderByDescending(kv => kv.Value).Take(16))
         {
             Console.WriteLine(
-                $"|{Quantum.Register.BitString(kv.Key)}⟩ : {kv.Value} ({(double)kv.Value / trials:P2})");
+                $"|{_simulator.Register.BitString(kv.Key)}⟩ : {kv.Value} ({(double)kv.Value / trials:P2})");
         }
 
         if (counts.Count > 16)
             Console.WriteLine("... (showing top 16 outcomes)");
     }
 
-    private static string TakeLowBits(string bitString, int k)
+    private string TakeLowBits(string bitString, int k)
     {
         if (k <= 0)
             return "";

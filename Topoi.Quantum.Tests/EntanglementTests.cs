@@ -8,104 +8,128 @@ public sealed class EntanglementTests
     [Test]
     public void CX_CreatesBellState()
     {
-        Quantum.Init(2);
-        Quantum.Reset();
+        var simulator = new QuantumSimulator(2);
+        simulator.H(0);
+        simulator.CX(0, 1);
 
-        Quantum.H(0);
-        Quantum.CX(0, 1);
-
-        TestHelpers.AssertProbability(TestHelpers.Basis(), 0.5);       // |00>
-        TestHelpers.AssertProbability(TestHelpers.Basis(0), 0.0);      // |01>
-        TestHelpers.AssertProbability(TestHelpers.Basis(1), 0.0);      // |10>
-        TestHelpers.AssertProbability(TestHelpers.Basis(0, 1), 0.5);   // |11>
+        TestHelpers.AssertProbability(simulator, TestHelpers.Basis(), 0.5);
+        TestHelpers.AssertProbability(simulator, TestHelpers.Basis(0), 0.0);
+        TestHelpers.AssertProbability(simulator, TestHelpers.Basis(1), 0.0);
+        TestHelpers.AssertProbability(simulator, TestHelpers.Basis(0, 1), 0.5);
     }
 
     [Test]
     public void BellState_HasExpectedCorrelations()
     {
-        Quantum.Init(2);
-        Quantum.Reset();
+        var simulator = new QuantumSimulator(2);
+        simulator.H(0);
+        simulator.CX(0, 1);
 
-        Quantum.H(0);
-        Quantum.CX(0, 1);
+        TestHelpers.AssertExpectation(
+            simulator,
+            0.0,
+            new PauliTerm('Z', 0));
 
-        TestHelpers.AssertExpectation(0.0, new PauliTerm('Z', 0));
-        TestHelpers.AssertExpectation(0.0, new PauliTerm('Z', 1));
-        TestHelpers.AssertExpectation(1.0, new PauliTerm('Z', 0), new PauliTerm('Z', 1));
-        TestHelpers.AssertExpectation(1.0, new PauliTerm('X', 0), new PauliTerm('X', 1));
+        TestHelpers.AssertExpectation(
+            simulator,
+            0.0,
+            new PauliTerm('Z', 1));
+
+        TestHelpers.AssertExpectation(
+            simulator,
+            1.0,
+            new PauliTerm('Z', 0),
+            new PauliTerm('Z', 1));
+
+        TestHelpers.AssertExpectation(
+            simulator,
+            1.0,
+            new PauliTerm('X', 0),
+            new PauliTerm('X', 1));
     }
 
     [Test]
     public void GHZState_HasExpectedProbabilities()
     {
-        Quantum.Init(3);
-        Quantum.Reset();
+        var simulator = new QuantumSimulator(3);
+        simulator.H(0);
+        simulator.CX(0, 1);
+        simulator.CX(1, 2);
 
-        Quantum.H(0);
-        Quantum.CX(0, 1);
-        Quantum.CX(1, 2);
+        TestHelpers.AssertProbability(simulator, TestHelpers.Basis(), 0.5);
+        TestHelpers.AssertProbability(simulator, TestHelpers.Basis(0, 1, 2), 0.5);
 
-        TestHelpers.AssertProbability(TestHelpers.Basis(), 0.5);          // |000>
-        TestHelpers.AssertProbability(TestHelpers.Basis(0, 1, 2), 0.5);   // |111>
-
-        TestHelpers.AssertProbability(TestHelpers.Basis(0), 0.0);
-        TestHelpers.AssertProbability(TestHelpers.Basis(1), 0.0);
-        TestHelpers.AssertProbability(TestHelpers.Basis(2), 0.0);
+        TestHelpers.AssertProbability(simulator, TestHelpers.Basis(0), 0.0);
+        TestHelpers.AssertProbability(simulator, TestHelpers.Basis(1), 0.0);
+        TestHelpers.AssertProbability(simulator, TestHelpers.Basis(2), 0.0);
     }
 
     [Test]
     public void GHZState_HasExpectedCorrelations()
     {
-        Quantum.Init(3);
-        Quantum.Reset();
+        var simulator = new QuantumSimulator(3);
 
-        Quantum.H(0);
-        Quantum.CX(0, 1);
-        Quantum.CX(1, 2);
+        simulator.H(0);
+        simulator.CX(0, 1);
+        simulator.CX(1, 2);
 
-        TestHelpers.AssertExpectation(1.0, new PauliTerm('Z', 0), new PauliTerm('Z', 1));
-        TestHelpers.AssertExpectation(1.0, new PauliTerm('Z', 1), new PauliTerm('Z', 2));
-        TestHelpers.AssertExpectation(1.0, new PauliTerm('Z', 0), new PauliTerm('Z', 2));
-        TestHelpers.AssertExpectation(1.0, new PauliTerm('X', 0), new PauliTerm('X', 1), new PauliTerm('X', 2));
+        TestHelpers.AssertExpectation(
+            simulator,
+            1.0,
+            new PauliTerm('Z', 0),
+            new PauliTerm('Z', 1));
+
+        TestHelpers.AssertExpectation(
+            simulator,
+            1.0,
+            new PauliTerm('Z', 1),
+            new PauliTerm('Z', 2));
+
+        TestHelpers.AssertExpectation(
+            simulator,
+            1.0,
+            new PauliTerm('Z', 0),
+            new PauliTerm('Z', 2));
+
+        TestHelpers.AssertExpectation(
+            simulator,
+            1.0,
+            new PauliTerm('X', 0),
+            new PauliTerm('X', 1),
+            new PauliTerm('X', 2));
     }
 
     [Test]
     public void SWAP_ExchangesTwoQubits()
     {
-        Quantum.Init(2);
-        Quantum.Reset();
+        var simulator = new QuantumSimulator(2);
+        simulator.X(0);
 
-        Quantum.X(0);
+        TestHelpers.AssertProbability(simulator, TestHelpers.Basis(0), 1.0);
 
-        TestHelpers.AssertProbability(TestHelpers.Basis(0), 1.0); // |01>
+        simulator.SWAP(0, 1);
 
-        Quantum.SWAP(0, 1);
-
-        TestHelpers.AssertProbability(TestHelpers.Basis(1), 1.0); // |10>
+        TestHelpers.AssertProbability(simulator, TestHelpers.Basis(1), 1.0);
     }
 
     [Test]
     public void CCX_FlipsTargetOnlyWhenBothControlsAreOne()
     {
-        Quantum.Init(3);
-        Quantum.Reset();
+        var simulator = new QuantumSimulator(3);
+        simulator.X(0);
+        simulator.X(1);
+        simulator.CCX(0, 1, 2);
 
-        Quantum.X(0);
-        Quantum.X(1);
-        Quantum.CCX(0, 1, 2);
-
-        TestHelpers.AssertProbability(TestHelpers.Basis(0, 1, 2), 1.0); // |111>
+        TestHelpers.AssertProbability(simulator, TestHelpers.Basis(0, 1, 2), 1.0);
     }
 
     [Test]
     public void CCX_DoesNotFlipTargetWhenOneControlIsZero()
     {
-        Quantum.Init(3);
-        Quantum.Reset();
+        var simulator = new QuantumSimulator(3);
+        simulator.X(0);
+        simulator.CCX(0, 1, 2);
 
-        Quantum.X(0);
-        Quantum.CCX(0, 1, 2);
-
-        TestHelpers.AssertProbability(TestHelpers.Basis(0), 1.0); // |001>
+        TestHelpers.AssertProbability(simulator, TestHelpers.Basis(0), 1.0);
     }
 }

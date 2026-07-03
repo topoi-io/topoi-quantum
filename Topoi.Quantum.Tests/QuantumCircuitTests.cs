@@ -101,18 +101,17 @@ public sealed class QuantumCircuitTests
     [Test]
     public void Circuit_Run_WithoutReset_ComposesWithExistingState()
     {
-        Quantum.Init(1);
-        Quantum.Reset();
+        var simulator = new QuantumSimulator(1);
 
-        Quantum.X(0);
+        simulator.X(0);
 
         var circuit = new QuantumCircuit(1);
         circuit.Add(new GateOperation(GateKind.X, new[] { 0 }));
 
-        circuit.Run(Quantum.DefaultSimulator, resetFirst: false);
+        circuit.Run(simulator, resetFirst: false);
 
-        TestHelpers.AssertProbability(0, 1.0);
-        TestHelpers.AssertProbability(1, 0.0);
+        TestHelpers.AssertProbability(simulator, 0, 1.0);
+        TestHelpers.AssertProbability(simulator, 1, 0.0);
     }
 
     [Test]

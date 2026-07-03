@@ -6,48 +6,49 @@ namespace Topoi.Quantum.Tests;
 [TestFixture]
 public sealed class PhaseGateTests
 {
+    QuantumSimulator _simulator;
+
     [SetUp]
     public void SetUp()
     {
-        Quantum.Init(1);
-        Quantum.Reset();
+        _simulator = new QuantumSimulator(1);
     }
 
     [Test]
     public void S_AppliesImaginaryPhaseToOneState()
     {
-        Quantum.X(0);
-        Quantum.S(0);
+        _simulator.X(0);
+        _simulator.S(0);
 
-        TestHelpers.AssertAmplitude(1, Complex.ImaginaryOne);
+        TestHelpers.AssertAmplitude(_simulator, 1, Complex.ImaginaryOne);
     }
 
     [Test]
     public void T_AppliesPiOverFourPhaseToOneState()
     {
-        Quantum.X(0);
-        Quantum.T(0);
+        _simulator.X(0);
+        _simulator.T(0);
 
         Complex expected = Complex.Exp(Complex.ImaginaryOne * Math.PI / 4.0);
 
-        TestHelpers.AssertAmplitude(1, expected);
+        TestHelpers.AssertAmplitude(_simulator, 1, expected);
     }
 
     [Test]
     public void RZ_Pi_OnZeroAppliesNegativeHalfPhase()
     {
-        Quantum.RZ(0, Math.PI);
+        _simulator.RZ(0, Math.PI);
 
         Complex expected = Complex.Exp(-Complex.ImaginaryOne * Math.PI / 2.0);
 
-        TestHelpers.AssertAmplitude(0, expected);
+        TestHelpers.AssertAmplitude(_simulator, 0, expected);
     }
 
     [Test]
     public void Y_MapsZeroToIOne()
     {
-        Quantum.Y(0);
+        _simulator.Y(0);
 
-        TestHelpers.AssertAmplitude(1, Complex.ImaginaryOne);
+        TestHelpers.AssertAmplitude(_simulator, 1, Complex.ImaginaryOne);
     }
 }

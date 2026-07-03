@@ -1,4 +1,5 @@
 ﻿using NUnit.Framework;
+using System.Numerics;
 
 namespace Topoi.Quantum.Tests;
 
@@ -8,48 +9,42 @@ public sealed class ControlledRotationTests
     [Test]
     public void CRY_DoesNothingWhenControlIsZero()
     {
-        Quantum.Init(2);
-        Quantum.Reset();
+        var simulator = new QuantumSimulator(2);
+        simulator.CRY(0, 1, Math.PI);
 
-        Quantum.CRY(0, 1, Math.PI);
-
-        TestHelpers.AssertProbability(TestHelpers.Basis(), 1.0);
+        TestHelpers.AssertAmplitude(simulator, TestHelpers.Basis(), Complex.One);
     }
 
     [Test]
     public void CRY_Pi_RotatesTargetWhenControlIsOne()
     {
-        Quantum.Init(2);
-        Quantum.Reset();
+        var simulator = new QuantumSimulator(2);
+        simulator.X(0);
+        simulator.CRY(0, 1, Math.PI);
 
-        Quantum.X(0);
-        Quantum.CRY(0, 1, Math.PI);
-
-        TestHelpers.AssertProbability(TestHelpers.Basis(0, 1), 1.0);
+        TestHelpers.AssertAmplitude(simulator, TestHelpers.Basis(0, 1), Complex.One);
     }
 
     [Test]
     public void CRX_DoesNothingWhenControlIsZero()
     {
-        Quantum.Init(2);
-        Quantum.Reset();
+        var simulator = new QuantumSimulator(2);
+        simulator.CRX(0, 1, Math.PI);
 
-        Quantum.CRX(0, 1, Math.PI);
-
-        TestHelpers.AssertProbability(TestHelpers.Basis(), 1.0);
+        TestHelpers.AssertAmplitude(simulator, TestHelpers.Basis(), Complex.One);
     }
 
     [Test]
     public void CRZ_DoesNotChangeComputationalBasisProbability()
     {
-        Quantum.Init(2);
-        Quantum.Reset();
+        var simulator = new QuantumSimulator(2);
+        simulator.X(0);
+        simulator.X(1);
+        simulator.CRZ(0, 1, Math.PI);
 
-        Quantum.X(0);
-        Quantum.X(1);
-
-        Quantum.CRZ(0, 1, Math.PI);
-
-        TestHelpers.AssertProbability(TestHelpers.Basis(0, 1), 1.0);
+        TestHelpers.AssertProbability(
+        simulator,
+        TestHelpers.Basis(0, 1),
+        1.0);
     }
 }

@@ -36,11 +36,6 @@ public sealed record GateOperation(GateKind Kind, IReadOnlyList<int> Qubits, dou
             throw new ArgumentException($"Gate {Kind} contains duplicate qubits.");
     }
 
-    public void Apply()
-    {
-        Apply(Quantum.DefaultSimulator);
-    }
-
     public void Apply(QuantumSimulator simulator)
     {
         if (simulator is null)

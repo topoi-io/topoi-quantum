@@ -6,22 +6,21 @@ namespace Topoi.Quantum.Tests;
 public sealed class QuantumSimulatorTests
 {
     [Test]
-    public void Simulator_Instance_CanRunIndependentlyOfStaticQuantumFacade()
+    public void Simulator_Instances_CanRunIndependently()
     {
-        Quantum.Init(1);
-        Quantum.Reset();
+        var simulator1 = new QuantumSimulator(1);
+        var simulator2 = new QuantumSimulator(2);
 
-        var simulator = new QuantumSimulator(2);
+        simulator2.H(0);
+        simulator2.CX(0, 1);
 
-        simulator.H(0);
-        simulator.CX(0, 1);
-
-        double[] probabilities = simulator.Register.Probabilities();
+        double[] probabilities = simulator2.Register.Probabilities();
 
         Assert.That(probabilities[TestHelpers.Basis()], Is.EqualTo(0.5).Within(TestHelpers.Tolerance));
         Assert.That(probabilities[TestHelpers.Basis(0, 1)], Is.EqualTo(0.5).Within(TestHelpers.Tolerance));
 
-        TestHelpers.AssertProbability(0, 1.0); // static Quantum still has its own 1-qubit zero state
+        TestHelpers.AssertProbability(simulator1, 0, 1.0);
+        TestHelpers.AssertProbability(simulator1, 1, 0.0);
     }
 
     [Test]

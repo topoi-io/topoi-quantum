@@ -8,72 +8,62 @@ public sealed class MeasurementTests
     [Test]
     public void MeasureAll_CollapsesZeroStateToZero()
     {
-        Quantum.Init(2);
-        Quantum.Reset();
-
-        int outcome = Quantum.MeasureAll();
+        var simulator = new QuantumSimulator(2);
+        int outcome = simulator.MeasureAll();
 
         Assert.That(outcome, Is.EqualTo(0));
-        TestHelpers.AssertProbability(0, 1.0);
+        TestHelpers.AssertProbability(simulator, 0, 1.0);
     }
 
     [Test]
     public void MeasureAll_CollapsesKnownBasisState()
     {
-        Quantum.Init(3);
-        Quantum.Reset();
-
-        Quantum.X(0);
-        Quantum.X(2);
+        var simulator = new QuantumSimulator(3);
+        simulator.X(0);
+        simulator.X(2);
 
         int expected = TestHelpers.Basis(0, 2);
-        int outcome = Quantum.MeasureAll();
+        int outcome = simulator.MeasureAll();
 
         Assert.That(outcome, Is.EqualTo(expected));
-        TestHelpers.AssertProbability(expected, 1.0);
+        TestHelpers.AssertProbability(simulator, expected, 1.0);
     }
 
     [Test]
     public void MeasureQubit_OnKnownZero_ReturnsZero()
     {
-        Quantum.Init(2);
-        Quantum.Reset();
-
-        int bit = Quantum.Measure(0);
+        var simulator = new QuantumSimulator(3);
+        int bit = simulator.Measure(0);
 
         Assert.That(bit, Is.EqualTo(0));
-        TestHelpers.AssertProbability(0, 1.0);
+        TestHelpers.AssertProbability(simulator, 0, 1.0);
     }
 
     [Test]
     public void MeasureQubit_OnKnownOne_ReturnsOne()
     {
-        Quantum.Init(2);
-        Quantum.Reset();
+        var simulator = new QuantumSimulator(2);
+        simulator.X(1);
 
-        Quantum.X(1);
-
-        int bit = Quantum.Measure(1);
+        int bit = simulator.Measure(1);
 
         Assert.That(bit, Is.EqualTo(1));
-        TestHelpers.AssertProbability(TestHelpers.Basis(1), 1.0);
+        TestHelpers.AssertProbability(simulator, TestHelpers.Basis(1), 1.0);
     }
 
     [Test]
     public void SnapshotAndRestore_PreservesPreparedState()
     {
-        Quantum.Init(2);
-        Quantum.Reset();
+        var simulator = new QuantumSimulator(2);
+        simulator.H(0);
+        simulator.CX(0, 1);
 
-        Quantum.H(0);
-        Quantum.CX(0, 1);
+        var snapshot = simulator.SnapshotState();
 
-        var snapshot = Quantum.SnapshotState();
+        simulator.MeasureAll();
+        simulator.RestoreState(snapshot);
 
-        Quantum.MeasureAll();
-        Quantum.RestoreState(snapshot);
-
-        TestHelpers.AssertProbability(TestHelpers.Basis(), 0.5);
-        TestHelpers.AssertProbability(TestHelpers.Basis(0, 1), 0.5);
+        TestHelpers.AssertProbability(simulator, TestHelpers.Basis(), 0.5);
+        TestHelpers.AssertProbability(simulator, TestHelpers.Basis(0, 1), 0.5);
     }
 }

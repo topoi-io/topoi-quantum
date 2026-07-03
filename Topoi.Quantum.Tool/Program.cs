@@ -8,20 +8,17 @@ using Topoi.Quantum.Parsing;
 
 Console.OutputEncoding = Encoding.UTF8;
 
-var executor = new CommandExecutor();
+QuantumSimulator? simulator = null;
+CommandExecutor? executor = null;
 
 if (args.Length > 0)
 {
     CliOptions options = CliOptionsParser.Parse(args);
 
-    if (options.ShowHelp)
-    {
-        HelpPrinter.PrintCliHelp();
-        return;
-    }
+    simulator = new QuantumSimulator(options.Qubits);
+    simulator.Reset();
 
-    Quantum.Init(options.Qubits);
-    Quantum.Reset();
+    executor = new CommandExecutor(simulator);
 
     RunCommandLine(options, executor);
     return;
@@ -37,9 +34,12 @@ string? s = Console.ReadLine();
 if (!string.IsNullOrWhiteSpace(s) && int.TryParse(s, out int parsed) && parsed > 0)
     n = parsed;
 
-Quantum.Init(n);
-Quantum.Reset();
-QuantumConsolePrinter.PrintStateTop(Quantum.Register);
+simulator = new QuantumSimulator(n);
+simulator.Reset();
+
+executor = new CommandExecutor(simulator);
+
+QuantumConsolePrinter.PrintStateTop(simulator.Register);
 
 Console.WriteLine();
 Console.WriteLine("Type HELP for Topoi Quantum commands. Angles are in radians.\n");
@@ -85,25 +85,19 @@ void RunCommandLine(CliOptions options, CommandExecutor executor)
     if (!string.IsNullOrWhiteSpace(options.RunPath))
     {
         executor.RunScriptPath(options.RunPath);
-        RunPostExecutionOptions(options);
+        RunPostExecutionOptions(options, executor);
         return;
     }
 
     if (!string.IsNullOrWhiteSpace(options.CircuitPath))
     {
         QuantumCircuit circuit = CircuitFileLoader.Load(
-            options.CircuitPath,
-            Quantum.Register.QubitCount);
+                                                        options.CircuitPath,
+                                                        executor.Simulator.Register.QubitCount);
 
-        if (options.PrintCircuit)
-            QuantumConsolePrinter.PrintCircuit(circuit);
+        circuit.Run(executor.Simulator, resetFirst: true);
 
-        if (options.DrawCircuit)
-            Console.Write(CircuitDrawer.Draw(circuit));
-
-        circuit.Run(Quantum.DefaultSimulator, resetFirst: true);
-
-        RunPostExecutionOptions(options);
+        RunPostExecutionOptions(options, executor);
         return;
     }
 
@@ -111,7 +105,7 @@ void RunCommandLine(CliOptions options, CommandExecutor executor)
     {
         QuantumCircuit circuit = OpenQasmCircuitLoader.LoadFromFile(options.OpenQasmPath);
 
-        Quantum.Init(circuit.QubitCount);
+        var qasmExecutor = new CommandExecutor(new QuantumSimulator(circuit.QubitCount));
 
         if (options.PrintCircuit)
             QuantumConsolePrinter.PrintCircuit(circuit);
@@ -119,29 +113,29 @@ void RunCommandLine(CliOptions options, CommandExecutor executor)
         if (options.DrawCircuit)
             Console.Write(CircuitDrawer.Draw(circuit));
 
-        circuit.Run(Quantum.DefaultSimulator, resetFirst: true);
+        circuit.Run(qasmExecutor.Simulator, resetFirst: true);
 
-        RunPostExecutionOptions(options);
+        RunPostExecutionOptions(options, qasmExecutor);
         return;
     }
 
     throw new ArgumentException("No action specified. Use --run <path>, --circuit <path>, or --help.");
 }
 
-void RunPostExecutionOptions(CliOptions options)
+void RunPostExecutionOptions(CliOptions options, CommandExecutor executor)
 {
     if (options.PrintState)
-        QuantumConsolePrinter.PrintStateTop(Quantum.Register); ;
+        QuantumConsolePrinter.PrintStateTop(executor.Simulator.Register);
 
     if (options.PrintProbabilities)
-        QuantumConsolePrinter.PrintProbabilitiesTop(Quantum.Register);
+        QuantumConsolePrinter.PrintProbabilitiesTop(executor.Simulator.Register);
 
     foreach (string observable in options.Expectations)
     {
         try
         {
             PauliTerm[] terms = ObservableParser.Parse(observable);
-            QuantumConsolePrinter.PrintExpectation(Quantum.DefaultSimulator, terms);
+            QuantumConsolePrinter.PrintExpectation(executor.Simulator, terms);
         }
         catch (Exception ex)
         {
@@ -150,8 +144,5 @@ void RunPostExecutionOptions(CliOptions options)
     }
 
     if (options.SampleCount is not null)
-    {
-        var executor = new CommandExecutor();
         executor.Execute($"SAMPLE {options.SampleCount.Value}");
-    }
 }
