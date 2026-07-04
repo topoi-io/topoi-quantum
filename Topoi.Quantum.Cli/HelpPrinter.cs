@@ -77,7 +77,7 @@ public static class HelpPrinter
         Console.WriteLine("Options:");
         Console.WriteLine("  --help, -h                  Show command-line help");
         Console.WriteLine("  --qubits <n>, -q <n>         Number of qubits to initialise, default 1");
-        Console.WriteLine("  --qasm <path>                Load and run an OpenQASM 3 circuit file");
+        Console.WriteLine("  --qasm <path>                Load and run an executable OpenQASM 3 program");
         Console.WriteLine("  --run <path>                 Run a full interpreter script and exit");
         Console.WriteLine("  --circuit <path>             Load and run a gate-only QuantumCircuit file and exit");
         Console.WriteLine("  --print-circuit              Print loaded circuit before execution");

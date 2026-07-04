@@ -109,17 +109,36 @@ void RunCommandLine(CliOptions options, CommandExecutor executor)
 
     if (!string.IsNullOrWhiteSpace(options.OpenQasmPath))
     {
-        QuantumCircuit circuit = OpenQasmCircuitLoader.LoadFromFile(options.OpenQasmPath);
+        OpenQasmExecutableProgram program =
+            OpenQasmCircuitLoader.LoadExecutableFromFile(options.OpenQasmPath);
 
-        var qasmExecutor = new CommandExecutor(new QuantumSimulator(circuit.QubitCount));
+        if (options.PrintCircuit || options.DrawCircuit)
+        {
+            bool canRenderAsCircuit = program.Operations.All(operation =>
+                operation is OpenQasmGateOperation or OpenQasmBarrierOperation);
 
-        if (options.PrintCircuit)
-            QuantumConsolePrinter.PrintCircuit(circuit);
+            if (!canRenderAsCircuit)
+            {
+                Console.WriteLine("--print-circuit/--draw skipped: executable OpenQASM contains measurement or reset.");
+            }
+            else
+            {
+                QuantumCircuit circuit = program.ToUnitaryCircuit();
 
-        if (options.DrawCircuit)
-            Console.Write(CircuitDrawer.Draw(circuit));
+                if (options.PrintCircuit)
+                    QuantumConsolePrinter.PrintCircuit(circuit);
 
-        circuit.Run(qasmExecutor.Simulator, resetFirst: true);
+                if (options.DrawCircuit)
+                    Console.Write(CircuitDrawer.Draw(circuit));
+            }
+        }
+
+        OpenQasmExecutionResult result = OpenQasmExecutor.Execute(program);
+
+        if (result.ClassicalBits.Length > 0)
+            Console.WriteLine("Classical bits: " + string.Join("", result.ClassicalBits));
+
+        var qasmExecutor = new CommandExecutor(result.Simulator);
 
         RunPostExecutionOptions(options, qasmExecutor);
         return;
