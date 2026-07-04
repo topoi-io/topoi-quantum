@@ -69,6 +69,26 @@ public static class GateOperationParser
                     operation = new GateOperation(GateKind.T, new[] { ParseQubit(parts, 1) });
                     return true;
 
+                case "I":
+                    operation = new GateOperation(GateKind.I, new[] { ParseQubit(parts, 1) });
+                    return true;
+
+                case "SDG":
+                    operation = new GateOperation(GateKind.SDG, new[] { ParseQubit(parts, 1) });
+                    return true;
+
+                case "TDG":
+                    operation = new GateOperation(GateKind.TDG, new[] { ParseQubit(parts, 1) });
+                    return true;
+
+                case "SX":
+                    operation = new GateOperation(GateKind.SX, new[] { ParseQubit(parts, 1) });
+                    return true;
+
+                case "SXDG":
+                    operation = new GateOperation(GateKind.SXDG, new[] { ParseQubit(parts, 1) });
+                    return true;
+
                 case "RX":
                     operation = new GateOperation(
                         GateKind.RX,
@@ -100,6 +120,18 @@ public static class GateOperationParser
                 case "CZ":
                     operation = new GateOperation(
                         GateKind.CZ,
+                        new[] { ParseQubit(parts, 1), ParseQubit(parts, 2) });
+                    return true;
+
+                case "CY":
+                    operation = new GateOperation(
+                        GateKind.CY,
+                        new[] { ParseQubit(parts, 1), ParseQubit(parts, 2) });
+                    return true;
+
+                case "CH":
+                    operation = new GateOperation(
+                        GateKind.CH,
                         new[] { ParseQubit(parts, 1), ParseQubit(parts, 2) });
                     return true;
 
@@ -138,6 +170,13 @@ public static class GateOperationParser
                 case "CRZ":
                     operation = new GateOperation(
                         GateKind.CRZ,
+                        new[] { ParseQubit(parts, 1), ParseQubit(parts, 2) },
+                        ParseAngle(parts, 3));
+                    return true;
+
+                case "CP":
+                    operation = new GateOperation(
+                        GateKind.CP,
                         new[] { ParseQubit(parts, 1), ParseQubit(parts, 2) },
                         ParseAngle(parts, 3));
                     return true;
