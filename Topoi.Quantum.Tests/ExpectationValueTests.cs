@@ -5,7 +5,7 @@ namespace Topoi.Quantum.Tests;
 [TestFixture]
 public sealed class ExpectationValueTests
 {
-    QuantumSimulator _simulator;
+    QuantumSimulator _simulator = null;
 
     [SetUp]
     public void SetUp()

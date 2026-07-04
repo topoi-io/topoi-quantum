@@ -15,6 +15,12 @@ if (args.Length > 0)
 {
     CliOptions options = CliOptionsParser.Parse(args);
 
+    if (options.ShowHelp)
+    {
+        HelpPrinter.PrintCliHelp();
+        return;
+    }
+
     simulator = new QuantumSimulator(options.Qubits);
     simulator.Reset();
 
