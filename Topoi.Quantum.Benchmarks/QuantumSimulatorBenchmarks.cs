@@ -2,12 +2,14 @@
 using System.Text;
 
 using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Diagnosers;
 
 using Topoi.Quantum.OpenQasm;
 using Topoi.Quantum.Primitives;
 
 namespace Topoi.Quantum.Benchmarks;
 
+[EventPipeProfiler(EventPipeProfile.CpuSampling)]
 [MemoryDiagnoser]
 public class ApplyHadamardBenchmarks
 {
