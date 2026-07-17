@@ -178,8 +178,37 @@ Expected benchmark classes:
 - `GhzCircuitBenchmarks`
 - `RandomShallowCircuitBenchmarks`
 
-| Circuit | Qubits | Depth | Mean | Error | StdDev | Allocated |
-|---|---:|---:|---:|---:|---:|---:|
+| Method             | Mean     | Error     | StdDev    | Allocated |
+|------------------- |---------:|----------:|----------:|----------:|
+| ExecuteBellCircuit | 1.835 μs | 0.1057 μs | 0.2785 μs |     904 B |
+
+| Method            | QubitCount | Mean          | Error        | StdDev        | Allocated |
+|------------------ |----------- |--------------:|-------------:|--------------:|----------:|
+| **ExecuteGhzCircuit** | **8**          |      **37.55 μs** |     **1.221 μs** |      **3.560 μs** |   **4.45 KB** |
+| **ExecuteGhzCircuit** | **12**         |     **146.10 μs** |     **2.922 μs** |      **7.276 μs** |   **6.82 KB** |
+| **ExecuteGhzCircuit** | **16**         |   **1,307.84 μs** |    **23.207 μs** |     **20.572 μs** |    **9.2 KB** |
+| **ExecuteGhzCircuit** | **20**         |  **24,449.77 μs** |   **474.731 μs** |    **766.602 μs** |  **11.57 KB** |
+| **ExecuteGhzCircuit** | **22**         | **103,419.92 μs** |   **968.150 μs** |    **905.608 μs** |  **12.76 KB** |
+| **ExecuteGhzCircuit** | **24**         | **451,866.22 μs** | **8,330.454 μs** | **12,969.514 μs** |  **13.95 KB** |
+
+| Method                      | QubitCount | Depth | Mean            | Error         | StdDev       | Allocated |
+|---------------------------- |----------- |------ |----------------:|--------------:|-------------:|----------:|
+| **ExecuteRandomShallowCircuit** | **8**          | **2**     |        **84.98 μs** |      **1.651 μs** |     **2.027 μs** |   **9.38 KB** |
+| **ExecuteRandomShallowCircuit** | **8**          | **4**     |       **140.03 μs** |      **2.689 μs** |     **5.845 μs** |  **18.75 KB** |
+| **ExecuteRandomShallowCircuit** | **8**          | **8**     |       **271.82 μs** |      **4.852 μs** |     **7.553 μs** |   **37.5 KB** |
+| **ExecuteRandomShallowCircuit** | **12**         | **2**     |       **557.86 μs** |      **7.327 μs** |     **6.496 μs** |  **14.06 KB** |
+| **ExecuteRandomShallowCircuit** | **12**         | **4**     |     **1,104.07 μs** |     **13.584 μs** |    **12.707 μs** |  **28.13 KB** |
+| **ExecuteRandomShallowCircuit** | **12**         | **8**     |     **2,150.28 μs** |     **41.873 μs** |    **48.221 μs** |  **56.25 KB** |
+| **ExecuteRandomShallowCircuit** | **16**         | **2**     |     **4,163.26 μs** |     **79.067 μs** |    **77.654 μs** |  **18.75 KB** |
+| **ExecuteRandomShallowCircuit** | **16**         | **4**     |     **6,204.45 μs** |     **81.866 μs** |   **196.145 μs** |   **37.5 KB** |
+| **ExecuteRandomShallowCircuit** | **16**         | **8**     |    **12,948.27 μs** |    **215.112 μs** |   **287.169 μs** |     **75 KB** |
+| **ExecuteRandomShallowCircuit** | **20**         | **2**     |    **75,662.20 μs** |  **1,458.537 μs** | **1,621.159 μs** |  **23.44 KB** |
+| **ExecuteRandomShallowCircuit** | **20**         | **4**     |   **139,457.80 μs** |  **1,748.721 μs** | **1,635.754 μs** |  **46.88 KB** |
+| **ExecuteRandomShallowCircuit** | **20**         | **8**     |   **276,032.11 μs** |  **2,621.111 μs** | **2,451.789 μs** |  **93.75 KB** |
+| **ExecuteRandomShallowCircuit** | **22**         | **2**     |   **309,913.71 μs** |  **3,562.260 μs** | **3,332.141 μs** |  **25.78 KB** |
+| **ExecuteRandomShallowCircuit** | **22**         | **4**     |   **627,758.76 μs** |  **4,920.668 μs** | **4,602.795 μs** |  **51.56 KB** |
+| **ExecuteRandomShallowCircuit** | **22**         | **8**     | **1,268,470.00 μs** | **10,653.674 μs** | **9,444.204 μs** | **103.13 KB** |
+
 
 ## OpenQASM benchmarks
 
@@ -193,8 +222,33 @@ Expected benchmark class:
 
 - `OpenQasmBenchmarks`
 
-| Method | Qubits | Mean | Error | StdDev | Allocated |
-|---|---:|---:|---:|---:|---:|
+| Method                          | QubitCount | Mean          | Error         | StdDev        | Gen0     | Gen1     | Gen2     | Allocated   |
+|-------------------------------- |----------- |--------------:|--------------:|--------------:|---------:|---------:|---------:|------------:|
+| **ParseGateOnlyQasm**               | **2**          |      **1.239 μs** |     **0.0155 μs** |     **0.0137 μs** |   **1.1902** |        **-** |        **-** |     **4.87 KB** |
+| ParseAndExecuteGateOnlyQasm     | 2          |      1.496 μs |     0.0297 μs |     0.0397 μs |   1.4458 |        - |        - |     5.91 KB |
+| ParseExecutableQasm             | 2          |      1.985 μs |     0.0387 μs |     0.0613 μs |   1.7433 |        - |        - |     7.13 KB |
+| ParseAndExecuteExecutableQasm   | 2          |      2.525 μs |     0.0496 μs |     0.0662 μs |   2.0981 |        - |        - |     8.58 KB |
+| ParseAndExecuteCustomGateQasm   | 2          |      3.329 μs |     0.0656 μs |     0.1060 μs |   3.0136 |        - |        - |    12.32 KB |
+| ParseAndExecuteFourBitAdderQasm | 2          |     79.922 μs |     0.8393 μs |     0.7851 μs |  23.5596 |   0.1221 |        - |    96.49 KB |
+| **ParseGateOnlyQasm**               | **8**          |      **3.810 μs** |     **0.0739 μs** |     **0.0986 μs** |   **3.7804** |        **-** |        **-** |    **15.45 KB** |
+| ParseAndExecuteGateOnlyQasm     | 8          |      7.302 μs |     0.1395 μs |     0.1661 μs |   5.8670 |        - |        - |    23.99 KB |
+| ParseExecutableQasm             | 8          |      6.221 μs |     0.1245 μs |     0.1222 μs |   5.5389 |        - |        - |    22.65 KB |
+| ParseAndExecuteExecutableQasm   | 8          |     13.236 μs |     0.2639 μs |     0.3524 μs |   7.7362 |   0.0153 |        - |    31.62 KB |
+| ParseAndExecuteCustomGateQasm   | 8          |      3.391 μs |     0.0665 μs |     0.0817 μs |   3.0136 |        - |        - |    12.32 KB |
+| ParseAndExecuteFourBitAdderQasm | 8          |     80.226 μs |     1.5629 μs |     1.6050 μs |  23.5596 |   0.1221 |        - |    96.49 KB |
+| **ParseGateOnlyQasm**               | **16**         |      **7.177 μs** |     **0.1424 μs** |     **0.1950 μs** |   **7.2403** |        **-** |        **-** |    **29.58 KB** |
+| ParseAndExecuteGateOnlyQasm     | 16         |  1,385.036 μs |    24.4493 μs |    20.4163 μs | 332.0313 | 332.0313 | 332.0313 |  1062.98 KB |
+| ParseExecutableQasm             | 16         |     11.666 μs |     0.2289 μs |     0.3283 μs |  10.6049 |   0.0153 |        - |    43.38 KB |
+| ParseAndExecuteExecutableQasm   | 16         |  3,316.568 μs |    62.3825 μs |    69.3380 μs | 332.0313 | 332.0313 | 332.0313 |  1077.23 KB |
+| ParseAndExecuteCustomGateQasm   | 16         |      3.361 μs |     0.0670 μs |     0.0939 μs |   3.0136 |        - |        - |    12.32 KB |
+| ParseAndExecuteFourBitAdderQasm | 16         |     80.514 μs |     1.5589 μs |     1.5311 μs |  23.5596 |   0.1221 |        - |    96.49 KB |
+| **ParseGateOnlyQasm**               | **20**         |      **9.044 μs** |     **0.1753 μs** |     **0.2830 μs** |   **8.6975** |        **-** |        **-** |    **35.57 KB** |
+| ParseAndExecuteGateOnlyQasm     | 20         | 27,205.657 μs |   360.1881 μs |   336.9202 μs | 500.0000 | 500.0000 | 500.0000 | 16431.63 KB |
+| ParseExecutableQasm             | 20         |     14.546 μs |     0.2828 μs |     0.3576 μs |  12.6343 |        - |        - |    51.62 KB |
+| ParseAndExecuteExecutableQasm   | 20         | 66,652.234 μs | 1,293.9472 μs | 1,210.3590 μs | 500.0000 | 500.0000 | 500.0000 | 16447.91 KB |
+| ParseAndExecuteCustomGateQasm   | 20         |      3.438 μs |     0.0603 μs |     0.0564 μs |   3.0136 |        - |        - |    12.32 KB |
+| ParseAndExecuteFourBitAdderQasm | 20         |     80.931 μs |     1.5894 μs |     2.2282 μs |  23.5596 |   0.1221 |        - |    96.49 KB |
+
 
 ## Measurement and sampling
 
@@ -212,8 +266,42 @@ Expected benchmark classes:
 - `SamplerBenchmarks`
 - `ExpectationValueBenchmarks`
 
-| Method | Qubits/Shots | Mean | Error | StdDev | Allocated |
-|---|---:|---:|---:|---:|---:|
+| Method       | QubitCount | Mean            | Error         | StdDev          | Median          | Ratio | RatioSD | Allocated | Alloc Ratio |
+|------------- |----------- |----------------:|--------------:|----------------:|----------------:|------:|--------:|----------:|------------:|
+| **RestoreOnly**  | **10**         |        **200.1 ns** |       **0.70 ns** |         **0.65 ns** |        **200.2 ns** |  **1.00** |    **0.00** |         **-** |          **NA** |
+| MeasureAll   | 10         |      1,840.8 ns |       4.88 ns |         4.33 ns |      1,840.6 ns |  9.20 |    0.04 |         - |          NA |
+| MeasureQubit | 10         |      1,982.7 ns |       8.74 ns |         8.17 ns |      1,980.1 ns |  9.91 |    0.05 |         - |          NA |
+|              |            |                 |               |                 |                 |       |         |           |             |
+| **RestoreOnly**  | **12**         |      **1,328.1 ns** |      **14.76 ns** |        **13.80 ns** |      **1,323.3 ns** |  **1.00** |    **0.01** |         **-** |          **NA** |
+| MeasureAll   | 12         |      7,586.5 ns |      38.85 ns |        36.34 ns |      7,573.4 ns |  5.71 |    0.06 |         - |          NA |
+| MeasureQubit | 12         |      8,366.4 ns |     108.68 ns |       101.66 ns |      8,337.3 ns |  6.30 |    0.10 |         - |          NA |
+|              |            |                 |               |                 |                 |       |         |           |             |
+| **RestoreOnly**  | **16**         |     **21,934.4 ns** |     **229.54 ns** |       **203.48 ns** |     **21,951.6 ns** |  **1.00** |    **0.01** |         **-** |          **NA** |
+| MeasureAll   | 16         |    120,833.0 ns |     799.64 ns |       708.86 ns |    120,986.8 ns |  5.51 |    0.06 |         - |          NA |
+| MeasureQubit | 16         |    139,284.9 ns |   1,811.42 ns |     1,694.41 ns |    138,892.9 ns |  6.35 |    0.09 |         - |          NA |
+|              |            |                 |               |                 |                 |       |         |           |             |
+| **RestoreOnly**  | **20**         |    **663,583.7 ns** |  **11,715.77 ns** |    **10,958.94 ns** |    **666,313.9 ns** |  **1.00** |    **0.02** |         **-** |          **NA** |
+| MeasureAll   | 20         |  2,361,168.9 ns |  45,786.33 ns |    44,968.30 ns |  2,359,414.6 ns |  3.56 |    0.09 |         - |          NA |
+| MeasureQubit | 20         |  2,689,046.2 ns |  53,099.56 ns |    41,456.64 ns |  2,682,363.7 ns |  4.05 |    0.09 |         - |          NA |
+|              |            |                 |               |                 |                 |       |         |           |             |
+| **RestoreOnly**  | **22**         |  **3,085,113.6 ns** |  **58,796.46 ns** |    **54,998.25 ns** |  **3,082,384.4 ns** |  **1.00** |    **0.02** |         **-** |          **NA** |
+| MeasureAll   | 22         | 10,108,830.6 ns | 193,750.82 ns |   171,755.06 ns | 10,132,674.2 ns |  3.28 |    0.08 |         - |          NA |
+| MeasureQubit | 22         | 10,444,341.6 ns | 203,890.30 ns |   340,654.91 ns | 10,618,582.0 ns |  3.39 |    0.12 |         - |          NA |
+|              |            |                 |               |                 |                 |       |         |           |             |
+| **RestoreOnly**  | **24**         | **12,628,385.9 ns** | **250,709.52 ns** |   **317,067.30 ns** | **12,502,851.6 ns** |  **1.00** |    **0.03** |         **-** |          **NA** |
+| MeasureAll   | 24         | 41,262,240.7 ns | 823,563.90 ns | 2,240,566.49 ns | 41,101,666.7 ns |  3.27 |    0.19 |         - |          NA |
+| MeasureQubit | 24         | 45,722,716.1 ns | 384,335.67 ns |   359,507.83 ns | 45,707,950.0 ns |  3.62 |    0.09 |         - |          NA |
+
+| Method            | Shots  | Mean        | Error     | StdDev    | Gen0       | Allocated   |
+|------------------ |------- |------------:|----------:|----------:|-----------:|------------:|
+| **SampleBellCircuit** | **1000**   |    **193.1 μs** |   **3.64 μs** |   **3.90 μs** |   **231.6895** |   **946.88 KB** |
+| **SampleBellCircuit** | **10000**  |  **1,919.8 μs** |  **36.35 μs** |  **38.90 μs** |  **2314.4531** |   **9454.7 KB** |
+| **SampleBellCircuit** | **100000** | **20,183.9 μs** | **392.57 μs** | **367.21 μs** | **23125.0000** | **94532.82 KB** |
+
+| Method         | Mean     | Error   | StdDev  | Gen0   | Allocated |
+|--------------- |---------:|--------:|--------:|-------:|----------:|
+| EstimateBellZZ | 253.4 ns | 2.87 ns | 2.69 ns | 0.3424 |    1.4 KB |
+
 
 ## Release checklist
 
