@@ -11,12 +11,15 @@
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>tq</ToolCommandName>
     <PackageId>Topoi.Quantum.Tool</PackageId>
-    <Version>1.0.0</Version>
+    <Version>0.1.0</Version>
     <Authors>Topoi</Authors>
-    <Description>Command-line tool for Topoi Quantum.</Description>
+    <Description>Command-line tool for Topoi Quantum: local state-vector simulation, OpenQASM execution, sampling, expectations, and circuit inspection.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <RepositoryUrl>https://github.com/topoi-io/topoi-quantum</RepositoryUrl>
     <PackageOutputPath>./nupkg</PackageOutputPath>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageProjectUrl>https://github.com/topoi-io/topoi-quantum</PackageProjectUrl>
+    <RepositoryType>git</RepositoryType>
   </PropertyGroup>
 
   <ItemGroup>
@@ -25,6 +28,8 @@
     <ProjectReference Include="..\Topoi.Quantum.Drawing\Topoi.Quantum.Drawing.csproj" />
     <ProjectReference Include="..\Topoi.Quantum.OpenQasm\Topoi.Quantum.OpenQasm.csproj" />
     <ProjectReference Include="..\Topoi.Quantum.Parsing\Topoi.Quantum.Parsing.csproj" />
+
+    <None Include="..\README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
 
 </Project>
