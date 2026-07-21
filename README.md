@@ -1,5 +1,7 @@
 # Topoi Quantum
 
+[![.NET CI](https://github.com/topoi-io/topoi-quantum/actions/workflows/dotnet.yml/badge.svg?branch=master)](https://github.com/topoi-io/topoi-quantum/actions/workflows/dotnet.yml)
+
 **A professional .NET quantum toolkit for circuit building, dense state-vector simulation, OpenQASM workflows, sampling, estimation, circuit drawing, command-line execution, and quantum-computing education.**
 
 Topoi Quantum provides a local quantum-computing laboratory and SDK for learning, prototyping, testing, and demonstrating quantum circuits in C# and .NET.
@@ -42,7 +44,7 @@ The global-tool project is already configured in source as `Topoi.Quantum.Tool` 
 | Circuit drawing | Implemented as Unicode/text drawing through `Topoi.Quantum.Drawing` |
 | SVG/PNG drawing | Not implemented |
 | Tests | Implemented with NUnit, NUnit analyzers, NUnit3 test adapter, and coverlet collector |
-| GitHub Actions CI | Not currently present in the repository |
+| GitHub Actions CI | Implemented with `.NET CI` workflow for restore, Release build, and NUnit tests |
 | Benchmarks | Not currently present in the repository |
 | Noise/density-matrix simulation | Not currently implemented |
 | Hardware/cloud backend integration | Not currently implemented |
