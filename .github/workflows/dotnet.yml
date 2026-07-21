@@ -1,0 +1,35 @@
+name: .NET CI
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+      - github-actions
+  pull_request:
+    branches:
+      - master
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Restore dependencies
+        run: dotnet restore Topoi.Quantum.slnx
+
+      - name: Build
+        run: dotnet build Topoi.Quantum.slnx --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test Topoi.Quantum.Tests/Topoi.Quantum.Tests.csproj --configuration Release --no-build --verbosity normal
