@@ -1,0 +1,30 @@
+<Project>
+  <PropertyGroup>
+    <!-- Shared release version for every Topoi Quantum package -->
+    <VersionPrefix>0.1.0</VersionPrefix>
+
+    <!-- Shared package metadata -->
+    <Authors>Topoi</Authors>
+    <Company>Topoi</Company>
+    <Copyright>Copyright © Topoi 2026</Copyright>
+
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+
+    <RepositoryUrl>https://github.com/topoi-io/topoi-quantum</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageProjectUrl>https://github.com/topoi-io/topoi-quantum</PackageProjectUrl>
+
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+
+    <!-- Produce .snupkg symbol packages -->
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+
+    <!-- Improve package traceability when built by GitHub Actions -->
+    <ContinuousIntegrationBuild
+      Condition="'$(GITHUB_ACTIONS)' == 'true'">
+      true
+    </ContinuousIntegrationBuild>
+  </PropertyGroup>
+</Project>

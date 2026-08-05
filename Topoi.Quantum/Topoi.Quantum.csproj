@@ -4,28 +4,33 @@
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+
     <RootNamespace>Topoi.Quantum</RootNamespace>
     <AssemblyName>Topoi.Quantum</AssemblyName>
 
+    <IsPackable>true</IsPackable>
+
     <PackageId>Topoi.Quantum</PackageId>
-    <Version>0.1.0</Version>
-    <Authors>Topoi</Authors>
-    <Company>Topoi</Company>
-    <Description>A professional .NET quantum toolkit for circuit building, state-vector simulation, OpenQASM workflows, sampling, estimation, and quantum computing education.</Description>
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <RepositoryUrl>https://github.com/topoi-io/topoi-quantum</RepositoryUrl>
-    <PackageTags>quantum;qasm;openqasm;simulator;dotnet;csharp;sampler;estimator</PackageTags>
+    <Title>Topoi Quantum</Title>
+
+    <Description>
+      A professional .NET quantum toolkit for circuit building,
+      dense state-vector simulation, sampling, estimation,
+      and quantum-computing education.
+    </Description>
+
+    <PackageTags>
+      quantum;qasm;simulator;dotnet;csharp;sampler;estimator
+    </PackageTags>
+
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <PackageProjectUrl>https://github.com/topoi-io/topoi-quantum</PackageProjectUrl>
-    <RepositoryType>git</RepositoryType>
-    <PublishRepositoryUrl>true</PublishRepositoryUrl>
-    <IncludeSymbols>true</IncludeSymbols>
-    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="..\README.md" Pack="true" PackagePath="\" />
+    <None Include="..\README.md"
+          Pack="true"
+          PackagePath="\" />
   </ItemGroup>
-
 </Project>

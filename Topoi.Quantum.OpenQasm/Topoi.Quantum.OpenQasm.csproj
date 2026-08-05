@@ -4,12 +4,28 @@
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+
     <RootNamespace>Topoi.Quantum.OpenQasm</RootNamespace>
     <AssemblyName>Topoi.Quantum.OpenQasm</AssemblyName>
+
+    <IsPackable>true</IsPackable>
+
+    <PackageId>Topoi.Quantum.OpenQasm</PackageId>
+    <Title>Topoi Quantum OpenQASM</Title>
+
+    <Description>
+      OpenQASM parsing, importing, exporting and execution
+      support for Topoi Quantum.
+    </Description>
+
+    <PackageTags>
+      quantum;openqasm;qasm;parser;simulator;dotnet;csharp
+    </PackageTags>
+
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Topoi.Quantum\Topoi.Quantum.csproj" />
   </ItemGroup>
-
 </Project>

@@ -4,12 +4,28 @@
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+
     <RootNamespace>Topoi.Quantum.Parsing</RootNamespace>
     <AssemblyName>Topoi.Quantum.Parsing</AssemblyName>
+
+    <IsPackable>true</IsPackable>
+
+    <PackageId>Topoi.Quantum.Parsing</PackageId>
+    <Title>Topoi Quantum Parsing</Title>
+
+    <Description>
+      Native circuit, command and observable parsing support
+      for Topoi Quantum.
+    </Description>
+
+    <PackageTags>
+      quantum;parser;circuits;dotnet;csharp
+    </PackageTags>
+
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Topoi.Quantum\Topoi.Quantum.csproj" />
   </ItemGroup>
-
 </Project>
