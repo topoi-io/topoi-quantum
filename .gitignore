@@ -5,3 +5,4 @@ bin
 BenchmarkDotNet.Artifacts
 traces
 artifacts
+/.idea/
