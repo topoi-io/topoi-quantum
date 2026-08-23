@@ -1,0 +1,81 @@
+name: Release
+
+# A GitHub Release is the explicit signal that a version should be published.
+#
+# When creating a release:
+#   1. Choose the commit/branch to release.
+#   2. Create a tag such as v0.2.0.
+#   3. Publish the GitHub Release.
+#
+# This workflow then tests and packages that exact tag.
+#
+# NuGet publishing is intentionally left as a documented TODO until the
+# Topoi NuGet.org account/package details are available.
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out released tag
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name }}
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Determine package version
+        id: version
+        shell: bash
+        run: |
+          # Release tags are expected to be vMAJOR.MINOR.PATCH, for example v0.2.0.
+          # TODO: Decide whether prerelease tags such as v0.2.0-rc.1 are allowed.
+          version="${GITHUB_REF_NAME#v}"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "Releasing version $version"
+
+      - name: Restore dependencies
+        run: dotnet restore Topoi.Quantum.slnx
+
+      - name: Build
+        run: dotnet build Topoi.Quantum.slnx --configuration Release --no-restore -p:Version=${{ steps.version.outputs.version }}
+
+      - name: Test
+        run: dotnet test Topoi.Quantum.Tests/Topoi.Quantum.Tests.csproj --configuration Release --no-build --verbosity normal
+
+      - name: Pack NuGet packages
+        run: dotnet pack Topoi.Quantum.slnx --configuration Release --no-build --output artifacts/packages -p:Version=${{ steps.version.outputs.version }}
+
+      - name: Upload packages as workflow artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: nuget-packages-${{ steps.version.outputs.version }}
+          path: artifacts/packages/*
+
+      # --------------------------------------------------------------------
+      # TODO: NuGet.org publishing
+      # --------------------------------------------------------------------
+      # Before enabling this step we need:
+      #   - the Topoi NuGet.org account/organization;
+      #   - the final package ID(s) / namespace;
+      #   - NuGet.org Trusted Publishing (OIDC) configured for this GitHub
+      #     repository and workflow.
+      #
+      # Once those details are known, publish the generated .nupkg/.snupkg
+      # files here. Prefer NuGet.org Trusted Publishing/OIDC over a long-lived
+      # API key.
+      #
+      # - name: Publish packages to NuGet.org
+      #   run: dotnet nuget push "artifacts/packages/*.nupkg" --source https://api.nuget.org/v3/index.json --api-key "$NUGET_API_KEY" --skip-duplicate
+      #   env:
+      #     NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
