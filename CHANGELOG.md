@@ -8,37 +8,18 @@ The format is based on Keep a Changelog, and the project follows Semantic Versio
 
 ## [0.1.0] - 2026-09-29
 
-### Added
+Initial public MVP release of Topoi Quantum.
 
-* Sparse-sampling regression tests for circuits with many qubits and a small number of shots.
-* Package-consumer smoke tests for the `Topoi.Quantum` SDK package.
-* Package-consumer smoke tests for the `Topoi.Quantum.OpenQasm` package.
-* Isolated installation tests for the `Topoi.Quantum.Tool` .NET global tool.
-* Shared package metadata and version management through `Directory.Build.props`.
-* Initial packaging for the Topoi Quantum SDK.
+### Packages
+
 * `Topoi.Quantum` NuGet package.
 * `Topoi.Quantum.OpenQasm` NuGet package.
 * `Topoi.Quantum.Parsing` NuGet package.
 * `Topoi.Quantum.Drawing` NuGet package.
 * `Topoi.Quantum.Cli` NuGet package.
-* `Topoi.Quantum.Tool` .NET global-tool package using the `tq` command.
-* Local package installation and consumer-project validation.
-* Symbol package generation using the `.snupkg` format.
+* `Topoi.Quantum.Tool` .NET global tool using the `tq` command.
+* Symbol packages using the `.snupkg` format.
 * Repository and source information in package metadata.
-
-### Changed
-
-* Changed `Sampler` result storage so that `Counts` and `Probabilities` contain observed outcomes only.
-* Changed sampling to accumulate results by integer basis-state index before converting distinct outcomes to bit strings.
-* Reduced sampler memory growth from being proportional to all `2^n` possible basis states to being proportional to the number of distinct observed outcomes.
-* Updated package projects so that all Topoi Quantum packages use a consistent version and package metadata.
-* Updated the command-line tool package to include the assemblies required for standalone installation.
-
-### Fixed
-
-* Fixed excessive memory allocation in `Sampler.Run()` for circuits with larger qubit counts.
-* Fixed package composition so that the SDK, OpenQASM package and global tool can be restored and used outside the source repository.
-* Fixed release validation by testing generated NuGet packages rather than testing only project references from the solution.
 
 ### Core SDK
 
@@ -48,7 +29,7 @@ The format is based on Keep a Changelog, and the project follows Semantic Versio
 * Seeded randomness for deterministic tests and experiments.
 * Full-register measurement.
 * Individual-qubit measurement and partial state collapse.
-* Circuit sampling.
+* Circuit sampling with sparse observed-outcome storage.
 * Pauli expectation-value estimation.
 * State snapshots and restoration.
 * State normalization and diagnostic support.
@@ -97,10 +78,13 @@ The format is based on Keep a Changelog, and the project follows Semantic Versio
 
 ### Testing and Performance
 
-* NUnit test suite covering gates, circuits, measurements, sampling, estimators, drawing and OpenQASM.
+* NUnit regression test suite covering gates, circuits, measurements, sampling, estimators, drawing and OpenQASM.
+* Package-consumer tests for `Topoi.Quantum`.
+* Package-consumer tests for `Topoi.Quantum.OpenQasm`.
+* Isolated installation testing for `Topoi.Quantum.Tool`.
 * BenchmarkDotNet performance project.
 * Benchmark results for Windows ARM64 and macOS ARM64.
-* GitHub Actions workflow for restore, Release build and automated tests.
+* GitHub Actions CI for restore, Release build and automated tests.
 
 ### Known Limitations
 
