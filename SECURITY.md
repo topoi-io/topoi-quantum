@@ -6,7 +6,7 @@ This policy explains which versions receive security updates, how to report a su
 
 ## Supported Versions
 
-Topoi Quantum is currently in its initial release-candidate stage.
+Topoi Quantum is currently in its initial 0.1.x MVP release line.
 
 | Version                                  | Security support                                                        |
 | ---------------------------------------- | ----------------------------------------------------------------------- |
@@ -17,7 +17,7 @@ Topoi Quantum is currently in its initial release-candidate stage.
 
 Users should upgrade to the latest available version before reporting a problem that may already have been corrected.
 
-Once stable releases are available, this table will be updated to identify the specific release lines that continue to receive security fixes.
+This table will be updated as supported release lines change.
 
 ## Reporting a Vulnerability
 

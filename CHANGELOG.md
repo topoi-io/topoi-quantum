@@ -6,6 +6,8 @@ The format is based on Keep a Changelog, and the project follows Semantic Versio
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-09-29
+
 ### Added
 
 * Sparse-sampling regression tests for circuits with many qubits and a small number of shots.
@@ -13,6 +15,16 @@ The format is based on Keep a Changelog, and the project follows Semantic Versio
 * Package-consumer smoke tests for the `Topoi.Quantum.OpenQasm` package.
 * Isolated installation tests for the `Topoi.Quantum.Tool` .NET global tool.
 * Shared package metadata and version management through `Directory.Build.props`.
+* Initial release-candidate packaging for the Topoi Quantum SDK.
+* `Topoi.Quantum` NuGet package.
+* `Topoi.Quantum.OpenQasm` NuGet package.
+* `Topoi.Quantum.Parsing` NuGet package.
+* `Topoi.Quantum.Drawing` NuGet package.
+* `Topoi.Quantum.Cli` NuGet package.
+* `Topoi.Quantum.Tool` .NET global-tool package using the `tq` command.
+* Local package installation and consumer-project validation.
+* Symbol package generation using the `.snupkg` format.
+* Repository and source information in package metadata.
 
 ### Changed
 
@@ -27,21 +39,6 @@ The format is based on Keep a Changelog, and the project follows Semantic Versio
 * Fixed excessive memory allocation in `Sampler.Run()` for circuits with larger qubit counts.
 * Fixed package composition so that the SDK, OpenQASM package and global tool can be restored and used outside the source repository.
 * Fixed release validation by testing generated NuGet packages rather than testing only project references from the solution.
-
-## v[0.1.0]
-
-### Added
-
-* Initial release-candidate packaging for the Topoi Quantum SDK.
-* `Topoi.Quantum` NuGet package.
-* `Topoi.Quantum.OpenQasm` NuGet package.
-* `Topoi.Quantum.Parsing` NuGet package.
-* `Topoi.Quantum.Drawing` NuGet package.
-* `Topoi.Quantum.Cli` NuGet package.
-* `Topoi.Quantum.Tool` .NET global-tool package using the `tq` command.
-* Local package installation and consumer-project validation.
-* Symbol package generation using the `.snupkg` format.
-* Repository and source information in package metadata.
 
 ### Core SDK
 
@@ -116,5 +113,5 @@ The format is based on Keep a Changelog, and the project follows Semantic Versio
 * SVG and PNG circuit rendering are not currently implemented.
 * OpenQASM `pow` and `negctrl` modifiers are not currently executable.
 
-[Unreleased]: https://github.com/topoi-io/topoi-quantum/compare/v0.1.0-rc.1...HEAD
-[0.1.0-rc.1]: https://github.com/topoi-io/topoi-quantum/releases/tag/v0.1.0-rc.1
+[Unreleased]: https://github.com/topoi-io/topoi-quantum/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/topoi-io/topoi-quantum/releases/tag/v0.1.0
