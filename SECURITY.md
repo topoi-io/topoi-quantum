@@ -10,8 +10,8 @@ Topoi Quantum is currently in its initial release-candidate stage.
 
 | Version                                  | Security support                                                        |
 | ---------------------------------------- | ----------------------------------------------------------------------- |
-| Latest `0.1.0` release candidate         | Supported                                                               |
-| Older `0.1.0` release candidates         | Supported only until users have had a reasonable opportunity to upgrade |
+| Latest `0.1.0`                           | Supported                                                               |
+| Older `0.1.0`                            | Supported only until users have had a reasonable opportunity to upgrade |
 | Development branches and untagged builds | Best effort                                                             |
 | Versions older than `0.1.0`              | Not supported                                                           |
 
