@@ -2,11 +2,13 @@
 
 [![.NET CI](https://github.com/topoi-io/topoi-quantum/actions/workflows/dotnet.yml/badge.svg?branch=master)](https://github.com/topoi-io/topoi-quantum/actions/workflows/dotnet.yml)
 
+**Developer Hub:** [topoi-io.github.io/quantum](https://topoi-io.github.io/quantum/)
+
 Topoi Quantum is a .NET 10 quantum-computing toolkit for building circuits, running local dense state-vector simulations, executing a practical subset of OpenQASM 3, sampling measurements, estimating Pauli observables, and drawing circuits in a terminal.
 
 It is designed for education, demonstrations, testing, algorithm prototyping, and small-to-medium local experiments. It is not intended to replace GPU, distributed, tensor-network, cloud, or hardware-backed quantum platforms.
 
-> **MVP status:** Topoi Quantum is currently in its `0.1.0` release cycle. APIs and package boundaries may evolve before `1.0.0`.
+> **MVP status:** `0.1.0` is the first public MVP release of Topoi Quantum. APIs and package boundaries may evolve before `1.0.0`.
 
 ## Highlights
 
@@ -39,7 +41,7 @@ dotnet --version
 
 ### Command-line tool
 
-Install the stable MVP tool after `0.1.0` is published:
+Install the Topoi Quantum command-line tool from NuGet.org:
 
 ```bash
 dotnet tool install --global Topoi.Quantum.Tool --version 0.1.0
@@ -51,19 +53,18 @@ Run:
 tq --help
 ```
 
-For a release candidate, specify its exact prerelease version instead, for example:
-
-```bash
-dotnet tool install --global Topoi.Quantum.Tool --version 0.1.0-rc.1
-```
 
 ### Core SDK
+
+Install the core SDK from NuGet.org:
 
 ```bash
 dotnet add package Topoi.Quantum --version 0.1.0
 ```
 
 ### OpenQASM support
+
+Add OpenQASM support from NuGet.org:
 
 ```bash
 dotnet add package Topoi.Quantum.OpenQasm --version 0.1.0
@@ -261,12 +262,12 @@ The `pow` and `negctrl` modifiers are not executable in the MVP. Timing, calibra
 
 | Package | Purpose |
 |---|---|
-| `Topoi.Quantum` | Core simulator, circuits, gates, sampler, estimator, observables, and randomness |
-| `Topoi.Quantum.OpenQasm` | OpenQASM parsing, conversion, execution, and export |
-| `Topoi.Quantum.Drawing` | Unicode/text circuit drawing |
-| `Topoi.Quantum.Parsing` | Native `.qc`, angle, gate, and observable parsing |
-| `Topoi.Quantum.Cli` | CLI option parsing, interactive execution, help, and console output |
-| `Topoi.Quantum.Tool` | Installable .NET tool exposing the `tq` command |
+| [`Topoi.Quantum`](https://www.nuget.org/packages/Topoi.Quantum/) | Core simulator, circuits, gates, sampler, estimator, observables, and randomness |
+| [`Topoi.Quantum.OpenQasm`](https://www.nuget.org/packages/Topoi.Quantum.OpenQasm/) | OpenQASM parsing, conversion, execution, and export |
+| [`Topoi.Quantum.Drawing`](https://www.nuget.org/packages/Topoi.Quantum.Drawing/) | Unicode/text circuit drawing |
+| [`Topoi.Quantum.Parsing`](https://www.nuget.org/packages/Topoi.Quantum.Parsing/) | Native `.qc`, angle, gate, and observable parsing |
+| [`Topoi.Quantum.Cli`](https://www.nuget.org/packages/Topoi.Quantum.Cli/) | CLI option parsing, interactive execution, help, and console output |
+| [`Topoi.Quantum.Tool`](https://www.nuget.org/packages/Topoi.Quantum.Tool/) | Installable .NET tool exposing the `tq` command |
 
 Most SDK users need `Topoi.Quantum`, adding `Topoi.Quantum.OpenQasm` when OpenQASM support is required. Tool users normally install only `Topoi.Quantum.Tool`; its required assemblies are bundled into the tool package.
 
@@ -324,20 +325,11 @@ Run the Bell example from source:
 dotnet run --project Topoi.Quantum.Tool -- --qasm examples/bell.qasm --draw --print --expect "ZZ 0 1"
 ```
 
-## Packaging
+## Release packaging
 
 Package versions and common metadata are managed in `Directory.Build.props`.
 
-Create release-candidate packages:
-
-```bash
-dotnet pack Topoi.Quantum.slnx \
-  --configuration Release \
-  --output artifacts/packages \
-  -p:VersionSuffix=rc.1
-```
-
-Create stable `0.1.0` packages by omitting `VersionSuffix`:
+Create the release packages:
 
 ```bash
 dotnet pack Topoi.Quantum.slnx \
@@ -345,7 +337,7 @@ dotnet pack Topoi.Quantum.slnx \
   --output artifacts/packages
 ```
 
-Before publishing, validate the generated SDK packages from clean consumer projects and install `Topoi.Quantum.Tool` from an isolated local package source.
+Before publishing a release, validate the generated SDK packages from clean consumer projects and install `Topoi.Quantum.Tool` from an isolated local package source.
 
 ## Testing and CI
 
