@@ -28,7 +28,7 @@ The format is based on Keep a Changelog, and the project follows Semantic Versio
 * Fixed package composition so that the SDK, OpenQASM package and global tool can be restored and used outside the source repository.
 * Fixed release validation by testing generated NuGet packages rather than testing only project references from the solution.
 
-## [0.1.0]
+## v[0.1.0]
 
 ### Added
 
