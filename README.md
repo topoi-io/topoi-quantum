@@ -2,11 +2,13 @@
 
 [![.NET CI](https://github.com/topoi-io/topoi-quantum/actions/workflows/dotnet.yml/badge.svg?branch=master)](https://github.com/topoi-io/topoi-quantum/actions/workflows/dotnet.yml)
 
+**Developer Hub:** [topoi-io.github.io/quantum](https://topoi-io.github.io/quantum/)
+
 Topoi Quantum is a .NET 10 quantum-computing toolkit for building circuits, running local dense state-vector simulations, executing a practical subset of OpenQASM 3, sampling measurements, estimating Pauli observables, and drawing circuits in a terminal.
 
 It is designed for education, demonstrations, testing, algorithm prototyping, and small-to-medium local experiments. It is not intended to replace GPU, distributed, tensor-network, cloud, or hardware-backed quantum platforms.
 
-> **MVP status:** Topoi Quantum is currently in its `0.1.0` release cycle. APIs and package boundaries may evolve before `1.0.0`.
+> **MVP status:** `0.1.0` is the first public MVP release of Topoi Quantum. APIs and package boundaries may evolve before `1.0.0`.
 
 ## Highlights
 
@@ -51,11 +53,6 @@ Run:
 tq --help
 ```
 
-For a release candidate, specify its exact prerelease version instead, for example:
-
-```bash
-dotnet tool install --global Topoi.Quantum.Tool --version 0.1.0-rc.1
-```
 
 ### Core SDK
 
@@ -328,16 +325,7 @@ dotnet run --project Topoi.Quantum.Tool -- --qasm examples/bell.qasm --draw --pr
 
 Package versions and common metadata are managed in `Directory.Build.props`.
 
-Create release-candidate packages:
-
-```bash
-dotnet pack Topoi.Quantum.slnx \
-  --configuration Release \
-  --output artifacts/packages \
-  -p:VersionSuffix=rc.1
-```
-
-Create stable `0.1.0` packages by omitting `VersionSuffix`:
+Create packages:
 
 ```bash
 dotnet pack Topoi.Quantum.slnx \
