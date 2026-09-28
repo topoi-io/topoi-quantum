@@ -15,7 +15,7 @@ The format is based on Keep a Changelog, and the project follows Semantic Versio
 * Package-consumer smoke tests for the `Topoi.Quantum.OpenQasm` package.
 * Isolated installation tests for the `Topoi.Quantum.Tool` .NET global tool.
 * Shared package metadata and version management through `Directory.Build.props`.
-* Initial release-candidate packaging for the Topoi Quantum SDK.
+* Initial packaging for the Topoi Quantum SDK.
 * `Topoi.Quantum` NuGet package.
 * `Topoi.Quantum.OpenQasm` NuGet package.
 * `Topoi.Quantum.Parsing` NuGet package.
