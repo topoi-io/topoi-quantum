@@ -10,7 +10,7 @@
 
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
-    <PackageIcon>topoi-icon.svg</PackageIcon>
+    <PackageIcon>topoi-icon.png</PackageIcon>
     <PackageReadmeFile>README.md</PackageReadmeFile>
 
     <RepositoryUrl>https://github.com/topoi-io/topoi-quantum</RepositoryUrl>
@@ -40,7 +40,7 @@
   <None Include="$(MSBuildThisFileDirectory)README.md"
         Pack="true"
         PackagePath="\" />
-  <None Include="$(MSBuildThisFileDirectory)assets\topoi-icon.svg"
+  <None Include="$(MSBuildThisFileDirectory)assets\topoi-icon.png"
         Pack="true"
         PackagePath="\" />
    </ItemGroup>
