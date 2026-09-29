@@ -1,16 +1,12 @@
 name: Release
 
-# A GitHub Release is the explicit signal that a version should be published.
+# Publishing a GitHub Release is the explicit signal to publish
+# the corresponding Topoi Quantum packages to NuGet.org.
 #
-# When creating a release:
-#   1. Choose the commit/branch to release.
-#   2. Create a tag such as v0.2.0.
-#   3. Publish the GitHub Release.
-#
-# This workflow then tests and packages that exact tag.
-#
-# NuGet publishing is intentionally left as a documented TODO until the
-# Topoi NuGet.org account/package details are available.
+# Expected release tag format:
+#   vMAJOR.MINOR.PATCH
+# Example:
+#   v0.1.0
 
 on:
   release:
@@ -18,6 +14,7 @@ on:
 
 permissions:
   contents: read
+  id-token: write
 
 jobs:
   release:
@@ -38,44 +35,81 @@ jobs:
         id: version
         shell: bash
         run: |
-          # Release tags are expected to be vMAJOR.MINOR.PATCH, for example v0.2.0.
-          # TODO: Decide whether prerelease tags such as v0.2.0-rc.1 are allowed.
-          version="${GITHUB_REF_NAME#v}"
+          tag="${{ github.event.release.tag_name }}"
+
+          if [[ ! "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Release tag must use the format vMAJOR.MINOR.PATCH, for example v0.1.0."
+            exit 1
+          fi
+
+          version="${tag#v}"
+
           echo "version=$version" >> "$GITHUB_OUTPUT"
-          echo "Releasing version $version"
+          echo "Releasing Topoi Quantum version $version"
 
       - name: Restore dependencies
         run: dotnet restore Topoi.Quantum.slnx
 
       - name: Build
-        run: dotnet build Topoi.Quantum.slnx --configuration Release --no-restore -p:Version=${{ steps.version.outputs.version }}
+        run: >
+          dotnet build Topoi.Quantum.slnx
+          --configuration Release
+          --no-restore
+          -p:Version=${{ steps.version.outputs.version }}
 
       - name: Test
-        run: dotnet test Topoi.Quantum.Tests/Topoi.Quantum.Tests.csproj --configuration Release --no-build --verbosity normal
+        run: >
+          dotnet test Topoi.Quantum.Tests/Topoi.Quantum.Tests.csproj
+          --configuration Release
+          --no-build
+          --verbosity normal
 
       - name: Pack NuGet packages
-        run: dotnet pack Topoi.Quantum.slnx --configuration Release --no-build --output artifacts/packages -p:Version=${{ steps.version.outputs.version }}
+        run: >
+          dotnet pack Topoi.Quantum.slnx
+          --configuration Release
+          --no-build
+          --output artifacts/packages
+          -p:Version=${{ steps.version.outputs.version }}
+
+      - name: Verify release packages
+        shell: bash
+        run: |
+          echo "Generated package files:"
+          find artifacts/packages -maxdepth 1 -type f -print | sort
+
+          nupkg_count=$(find artifacts/packages -maxdepth 1 -type f -name "*.nupkg" ! -name "*.snupkg" | wc -l)
+          snupkg_count=$(find artifacts/packages -maxdepth 1 -type f -name "*.snupkg" | wc -l)
+
+          echo "Primary packages: $nupkg_count"
+          echo "Symbol packages:  $snupkg_count"
+
+          if [ "$nupkg_count" -ne 6 ]; then
+            echo "Expected 6 .nupkg packages but found $nupkg_count."
+            exit 1
+          fi
+
+          if [ "$snupkg_count" -ne 6 ]; then
+            echo "Expected 6 .snupkg packages but found $snupkg_count."
+            exit 1
+          fi
 
       - name: Upload packages as workflow artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: nuget-packages-${{ steps.version.outputs.version }}
           path: artifacts/packages/*
+          if-no-files-found: error
 
-      # --------------------------------------------------------------------
-      # TODO: NuGet.org publishing
-      # --------------------------------------------------------------------
-      # Before enabling this step we need:
-      #   - the Topoi NuGet.org account/organization;
-      #   - the final package ID(s) / namespace;
-      #   - NuGet.org Trusted Publishing (OIDC) configured for this GitHub
-      #     repository and workflow.
-      #
-      # Once those details are known, publish the generated .nupkg/.snupkg
-      # files here. Prefer NuGet.org Trusted Publishing/OIDC over a long-lived
-      # API key.
-      #
-      # - name: Publish packages to NuGet.org
-      #   run: dotnet nuget push "artifacts/packages/*.nupkg" --source https://api.nuget.org/v3/index.json --api-key "$NUGET_API_KEY" --skip-duplicate
-      #   env:
-      #     NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+      - name: NuGet login
+        uses: NuGet/login@v1
+        id: nuget-login
+        with:
+          user: admin-topoi
+
+      - name: Publish packages to NuGet.org
+        run: >
+          dotnet nuget push "artifacts/packages/*.nupkg"
+          --source https://api.nuget.org/v3/index.json
+          --api-key ${{ steps.nuget-login.outputs.NUGET_API_KEY }}
+          --skip-duplicate
