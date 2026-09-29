@@ -10,10 +10,18 @@
 
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <PackageIcon>topoi-icon.png</PackageIcon>
 
     <RepositoryUrl>https://github.com/topoi-io/topoi-quantum</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
-    <PackageProjectUrl>https://github.com/topoi-io/topoi-quantum</PackageProjectUrl>
+    <PackageProjectUrl>https://topoi-io.github.io/quantum/</PackageProjectUrl>
+
+    <PackageReleaseNotes>
+      Initial public MVP release of Topoi Quantum.
+      Includes dense state-vector simulation, circuit construction,
+      sampling, Pauli expectation estimation, OpenQASM support,
+      circuit drawing, parsing, CLI components and the tq .NET tool.
+    </PackageReleaseNotes>
 
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
 
@@ -27,4 +35,9 @@
       true
     </ContinuousIntegrationBuild>
   </PropertyGroup>
+  <ItemGroup>
+  <None Include="$(MSBuildThisFileDirectory)assets\topoi-icon.png"
+        Pack="true"
+        PackagePath="\" />
+   </ItemGroup>
 </Project>
