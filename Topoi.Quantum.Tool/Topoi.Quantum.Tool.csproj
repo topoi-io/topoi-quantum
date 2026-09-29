@@ -24,8 +24,6 @@
     <PackageTags>
       quantum;openqasm;qasm;simulator;cli;tool;dotnet
     </PackageTags>
-
-    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
   <ItemGroup>
