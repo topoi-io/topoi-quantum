@@ -36,7 +36,7 @@
     </ContinuousIntegrationBuild>
   </PropertyGroup>
   <ItemGroup>
-  <None Include="$(MSBuildThisFileDirectory)assets\topoi-icon.png"
+  <None Include="$(MSBuildThisFileDirectory)assets\topoi-icon.svg"
         Pack="true"
         PackagePath="\" />
    </ItemGroup>

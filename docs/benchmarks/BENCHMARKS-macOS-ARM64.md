@@ -15,10 +15,8 @@ It is not positioned as a GPU, distributed, tensor-network, or cloud-hardware ba
 - .NET SDK: 10.0.103
 - .NET Runtime: .NET 10.0.3 (10.0.3, 10.0.326.7603), Arm64 RyuJIT armv8.0-a
 - BenchmarkDotNet: v0.15.8
-- Commit:
 - Build configuration: Release
 - Power mode: Plugged in
-- Plugged in: Yes
 
 ## Summary
 

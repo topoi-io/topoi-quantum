@@ -15,10 +15,8 @@ It is not positioned as a GPU, distributed, tensor-network, or cloud-hardware ba
 - .NET SDK: 10.0.301
 - .NET Runtime: .NET 10.0.9 (10.0.9, 10.0.926.27113)
 - BenchmarkDotNet: v0.15.8
-- Commit:
 - Build configuration: Release
 - Power mode: Plugged In
-- Plugged in: Yes
 
 ## Summary
 
