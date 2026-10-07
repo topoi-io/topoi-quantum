@@ -2,7 +2,9 @@
 name: Bug report
 description: Report a reproducible problem with Topoi Quantum
 title: "[Bug]: "
-labels: []
+labels:
+  - bug
+  - needs triage
 body:
   - type: markdown
     attributes:
