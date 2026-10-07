@@ -1,0 +1,20 @@
+```yaml
+blank_issues_enabled: false
+
+contact_links:
+  - name: Ask a question
+    url: https://github.com/topoi-io/topoi-quantum/discussions/categories/q-a
+    about: Ask for help using Topoi Quantum in the Q&A community.
+
+  - name: Suggest an idea
+    url: https://github.com/topoi-io/topoi-quantum/discussions/categories/ideas
+    about: Discuss feature ideas and possible improvements before they become development issues.
+
+  - name: Topoi Quantum Discussions
+    url: https://github.com/topoi-io/topoi-quantum/discussions
+    about: Join the Topoi Quantum community and general project discussions.
+
+  - name: Report a security vulnerability
+    url: https://github.com/topoi-io/topoi-quantum/blob/master/SECURITY.md
+    about: Please follow our private security reporting process instead of opening a public issue.
+```
