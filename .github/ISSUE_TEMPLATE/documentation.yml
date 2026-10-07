@@ -1,8 +1,9 @@
-```yaml
 name: Documentation issue
 description: Report missing, incorrect, or unclear Topoi Quantum documentation
 title: "[Docs]: "
-labels: []
+labels:
+  - documentation
+  - needs triage
 body:
   - type: markdown
     attributes:
@@ -59,4 +60,3 @@ body:
       options:
         - label: I have checked that this documentation issue has not already been reported.
           required: true
-```
