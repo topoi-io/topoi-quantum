@@ -1,0 +1,62 @@
+```yaml
+name: Documentation issue
+description: Report missing, incorrect, or unclear Topoi Quantum documentation
+title: "[Docs]: "
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for helping improve the Topoi Quantum documentation.
+
+        Please describe what is missing, incorrect, outdated, or unclear.
+
+  - type: dropdown
+    id: location
+    attributes:
+      label: Documentation area
+      description: Where did you find the problem?
+      options:
+        - Developer Hub
+        - Repository README
+        - Installation documentation
+        - SDK documentation
+        - CLI documentation
+        - OpenQASM documentation
+        - Examples
+        - Package documentation
+        - CONTRIBUTING.md
+        - SUPPORT.md
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: page
+    attributes:
+      label: Page or location
+      description: Provide the page URL, file name, heading, or other location if known.
+      placeholder: "e.g. Developer Hub → OpenQASM"
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What is wrong or missing?
+      description: Explain the documentation problem.
+    validations:
+      required: true
+
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: Suggested improvement
+      description: If you have a suggestion for how the documentation could be improved, describe it here.
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I have checked that this documentation issue has not already been reported.
+          required: true
+```
