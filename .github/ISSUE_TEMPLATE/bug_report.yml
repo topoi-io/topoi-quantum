@@ -1,0 +1,136 @@
+```yaml
+name: Bug report
+description: Report a reproducible problem with Topoi Quantum
+title: "[Bug]: "
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for taking the time to report a problem with Topoi Quantum.
+
+        Please provide enough information for us to reproduce and investigate the issue.
+
+        For general questions or help using Topoi Quantum, please use GitHub Discussions instead.
+
+        Do not report security vulnerabilities here. Please follow the instructions in SECURITY.md.
+
+  - type: input
+    id: version
+    attributes:
+      label: Topoi Quantum version
+      description: Which version of Topoi Quantum are you using?
+      placeholder: "e.g. 0.1.0"
+    validations:
+      required: true
+
+  - type: input
+    id: dotnet-version
+    attributes:
+      label: .NET SDK version
+      description: Run `dotnet --version` and enter the result.
+      placeholder: "e.g. 10.0.100"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Affected component
+      description: Which part of Topoi Quantum is affected?
+      options:
+        - Topoi.Quantum
+        - Topoi.Quantum.OpenQasm
+        - Topoi.Quantum.Drawing
+        - Topoi.Quantum.Parsing
+        - Topoi.Quantum.Cli
+        - Topoi.Quantum.Tool
+        - Simulator
+        - Circuit API
+        - Sampling or measurement
+        - Estimator or observables
+        - Documentation
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: operating-system
+    attributes:
+      label: Operating system
+      options:
+        - Windows
+        - macOS
+        - Linux
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Describe the bug
+      description: Give a clear description of what is going wrong.
+      placeholder: Describe the problem you encountered.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: Provide the smallest set of steps needed to reproduce the problem.
+      placeholder: |
+        1. Create...
+        2. Run...
+        3. Observe...
+    validations:
+      required: true
+
+  - type: textarea
+    id: minimal-example
+    attributes:
+      label: Minimal example
+      description: Include a minimal C#, OpenQASM, CLI, or other example where possible.
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behaviour
+      description: What did you expect Topoi Quantum to do?
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behaviour
+      description: What actually happened?
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Exception messages or output
+      description: Include any relevant exception messages, stack traces, or console output.
+      render: shell
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional context
+      description: Add any other information that may help us investigate the issue.
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I have searched existing Issues for the same problem.
+          required: true
+        - label: I have provided enough information to reproduce the issue where possible.
+          required: true
+        - label: This is not a security vulnerability.
+          required: true
+```
